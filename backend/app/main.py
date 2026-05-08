@@ -2,11 +2,20 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.routers import health, recommendations, onboarding
+from app.database import init_db
+from contextlib import asynccontextmanager
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Initialize DB
+    init_db()
+    yield
 
 app = FastAPI(
     title="Job-Ops API",
     description="Fresher-first job matching API.",
     version="0.1.0",
+    lifespan=lifespan,
 )
 
 # Configure CORS

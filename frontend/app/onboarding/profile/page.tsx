@@ -66,12 +66,33 @@ export default function ProfileReview() {
   }, [router]);
 
   const handleSave = async () => {
+    if (!profile) return;
     setSaving(true);
-    // Simulate API call for now since we don't have DB storage implemented yet
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    setSaving(false);
-    setSaveSuccess(true);
-    setTimeout(() => setSaveSuccess(false), 3000);
+    setSaveSuccess(false);
+    setError("");
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/v1/onboarding/profile`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(profile),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || "Failed to save profile.");
+      }
+      
+      setSaveSuccess(true);
+      // Wait a moment for the user to see the success message
+      setTimeout(() => {
+        router.push("/");
+      }, 1500);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
+    }
   };
 
   if (loading || extracting) {

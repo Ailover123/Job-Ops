@@ -1,75 +1,59 @@
 # Job-Ops
 
-AI Fresher Job Matcher is a fresher-focused job discovery platform. It builds a structured profile from one resume, gathers jobs from public and ATS-style sources, and recommends roles by skill, location, work mode, and fresher suitability.
+AI Fresher Job Matcher is a fresher-focused job discovery platform. It builds a structured profile from a resume, gathers jobs from public and ATS-style sources, and recommends roles by skill, location, work mode, and fresher suitability.
 
 This project intentionally avoids making resume rewriting or auto-apply the core flow.
 
 ## Current Status
 
-Planning docs and seed data are ready. The codebase is scaffolded and the first vertical slice (Backend + Frontend) is running with seed data.
+The application now supports **PostgreSQL persistence** for user profiles. The initial onboarding flow is functional, from resume upload to profile saving.
 
-- `frontend/` - Next.js app
-- `backend/` - FastAPI app
-- `data/seed_jobs.json` - synthetic seed listings for development
-- `docs/` - product, architecture, API, database, matching, and handoff docs
+- **Backend**: FastAPI with SQLModel (SQLAlchemy + Pydantic v2).
+- **Frontend**: Next.js (App Router) with persistent state management.
+- **Database**: PostgreSQL (Supabase recommended for dev).
+
+## Application Flow
+
+1. **Resume Upload**: User uploads a PDF resume.
+2. **Text Extraction**: System extracts raw text using `pypdf`.
+3. **Profile Extraction**: AI (Gemini) structures the text into a detailed profile.
+4. **Profile Review**: User reviews and edits the extracted details.
+5. **Save Profile**: Profile is persisted in PostgreSQL.
+6. **Dashboard**: User receives personalized job recommendations.
+
+## Screenshots
+
+| Home Page | Resume Upload | Profile Review |
+| :---: | :---: | :---: |
+| ![Home](docs/assets/home.png) | ![Upload](docs/assets/upload.png) | ![Review](docs/assets/review.png) |
 
 ## Local Development Setup
 
 ### Prerequisites
 - Python 3.13+
 - Node.js v22+
-- npm (on Windows, use `npm.cmd` if blocked by execution policy)
+- PostgreSQL instance (Local or Supabase)
 
 ### Backend Setup
-1. Navigate to the backend directory:
-   ```bash
-   cd backend
+1. Navigate to `backend/`.
+2. Create and activate a virtual environment.
+3. Install dependencies: `pip install -r requirements.txt`.
+4. Create a `.env` file based on `.env.example`:
+   ```env
+   GEMINI_API_KEY=your_key_here
+   DATABASE_URL=postgresql://user:pass@host:5432/dbname
    ```
-2. Create a virtual environment:
-   ```bash
-   python -m venv .venv
-   ```
-3. Activate the virtual environment:
-   - Windows: `.venv\Scripts\activate`
-   - Mac/Linux: `source .venv/bin/activate`
-4. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-5. Run tests:
-   ```bash
-   python -m pytest
-   ```
-6. Start the FastAPI server:
-   ```bash
-   python -m uvicorn app.main:app --reload
-   ```
-   The API will be available at `http://localhost:8000`.
+5. Run migrations (initializes schema): `python -m app.main`.
+6. Start server: `python -m uvicorn app.main:app --reload`.
 
 ### Frontend Setup
-1. Navigate to the frontend directory:
-   ```bash
-   cd frontend
-   ```
-2. Install dependencies:
-   ```bash
-   npm.cmd install
-   ```
-3. Start the Next.js dev server:
-   ```bash
-   npm.cmd run dev
-   ```
-   The dashboard will be available at `http://localhost:3000`.
-
-## Architecture
-- **Frontend**: Next.js (App Router), Tailwind CSS.
-- **Backend**: FastAPI, Pydantic, Rule-based matching engine.
-- **Data**: Seed jobs available in `data/seed_jobs.json`.
+1. Navigate to `frontend/`.
+2. Install dependencies: `npm.cmd install`.
+3. Start dev server: `npm.cmd run dev`.
 
 ## Documentation
 For more details, see the `docs/` directory:
-- `ARCHITECTURE.md` - Technical overview
-- `API_CONTRACT.md` - Endpoint specifications
-- `DATABASE_SCHEMA.md` - Data models
-- `MATCHING_LOGIC.md` - How jobs are ranked
-- `AI_WORKFLOW.md` - How LLMs are integrated
+- [ARCHITECTURE.md](docs/ARCHITECTURE.md) - Technical overview
+- [API_CONTRACT.md](docs/API_CONTRACT.md) - Endpoint specifications
+- [DATABASE_SCHEMA.md](docs/DATABASE_SCHEMA.md) - Data models
+- [MATCHING_LOGIC.md](docs/MATCHING_LOGIC.md) - How jobs are ranked

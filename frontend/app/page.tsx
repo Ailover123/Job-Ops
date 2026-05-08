@@ -58,6 +58,8 @@ async function getJobs() {
   }
 }
 
+export const dynamic = 'force-dynamic';
+
 export default async function Home() {
   const recommendations = await getJobs();
   const isDemoMode = recommendations === MOCK_RECOMMENDATIONS;
