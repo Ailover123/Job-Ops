@@ -2,6 +2,8 @@ from fastapi import APIRouter, File, UploadFile, HTTPException
 from pydantic import BaseModel
 import io
 from pypdf import PdfReader
+from app.schemas import ProfileExtractRequest, ProfileExtractResponse
+from app.services.parser_service import extract_profile_from_text
 
 router = APIRouter(tags=["onboarding"])
 
@@ -10,6 +12,7 @@ class ResumeUploadResponse(BaseModel):
     size_bytes: int
     status: str
     text_preview: str
+    extracted_text: str
     text_length: int
 
 @router.post("/onboarding/resume", response_model=ResumeUploadResponse)
@@ -47,5 +50,14 @@ async def upload_resume(file: UploadFile = File(...)):
         size_bytes=size,
         status="uploaded",
         text_preview=extracted_text[:500],
+        extracted_text=extracted_text,
         text_length=len(extracted_text)
     )
+
+@router.post("/onboarding/profile/extract", response_model=ProfileExtractResponse)
+async def extract_profile(request: ProfileExtractRequest):
+    if not request.resume_text or not request.resume_text.strip():
+        raise HTTPException(status_code=400, detail="Resume text is required for extraction.")
+    
+    profile, method = extract_profile_from_text(request.resume_text)
+    return ProfileExtractResponse(profile=profile, extraction_method=method)

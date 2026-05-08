@@ -35,6 +35,8 @@ def test_upload_resume_success():
         assert data["status"] == "uploaded"
         assert data["text_length"] > 0
         assert "text_preview" in data
+        assert "extracted_text" in data
+        assert len(data["text_preview"]) <= 500
 
 def test_upload_resume_invalid_type():
     # Create a dummy text content

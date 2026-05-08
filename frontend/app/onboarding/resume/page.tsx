@@ -53,6 +53,10 @@ export default function ResumeUpload() {
 
       const data = await response.json();
       console.log("Upload success:", data);
+      
+      // Store full extracted text for the next step
+      localStorage.setItem("extracted_resume_text", data.extracted_text);
+      
       setTextPreview(data.text_preview);
       setTextLength(data.text_length);
       setStatus("success");
