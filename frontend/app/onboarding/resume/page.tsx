@@ -10,6 +10,8 @@ export default function ResumeUpload() {
   const [file, setFile] = useState<File | null>(null);
   const [status, setStatus] = useState<"idle" | "uploading" | "success" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState("");
+  const [textPreview, setTextPreview] = useState("");
+  const [textLength, setTextLength] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -24,6 +26,8 @@ export default function ResumeUpload() {
       setFile(selectedFile);
       setStatus("idle");
       setErrorMessage("");
+      setTextPreview("");
+      setTextLength(0);
     }
   };
 
@@ -49,6 +53,8 @@ export default function ResumeUpload() {
 
       const data = await response.json();
       console.log("Upload success:", data);
+      setTextPreview(data.text_preview);
+      setTextLength(data.text_length);
       setStatus("success");
     } catch (err: any) {
       console.error("Upload error:", err);
@@ -129,6 +135,29 @@ export default function ResumeUpload() {
           <div className="success-text" style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center' }}>
             <CheckCircle size={16} />
             Resume uploaded successfully!
+          </div>
+        )}
+
+        {status === "success" && textPreview && (
+          <div style={{ marginTop: '24px', textAlign: 'left' }}>
+            <p style={{ fontSize: '12px', fontWeight: 600, color: '#64748b', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              Extracted Content Preview ({textLength} characters)
+            </p>
+            <div style={{ 
+              background: '#f8fafc', 
+              border: '1px solid #e2e8f0', 
+              borderRadius: '8px', 
+              padding: '12px', 
+              fontSize: '13px', 
+              color: '#334155',
+              maxHeight: '150px',
+              overflowY: 'auto',
+              whiteSpace: 'pre-wrap',
+              fontFamily: 'monospace'
+            }}>
+              {textPreview}
+              {textLength > textPreview.length && "..."}
+            </div>
           </div>
         )}
 
