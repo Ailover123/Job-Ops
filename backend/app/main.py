@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import health, recommendations, onboarding
+from app.routers import health, recommendations, onboarding, jobs
 from app.database import init_db
 from contextlib import asynccontextmanager
 
@@ -30,4 +30,5 @@ app.add_middleware(
 app.include_router(health.router)
 app.include_router(recommendations.router, prefix="/api/v1")
 app.include_router(onboarding.router, prefix="/api/v1")
+app.include_router(jobs.router, prefix="/api/v1")
 

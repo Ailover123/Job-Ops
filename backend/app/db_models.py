@@ -19,3 +19,29 @@ class Profile(SQLModel, table=True):
     
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class SavedJob(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    job_external_id: str = Field(index=True, unique=True)
+    job_title: str
+    company_name: str
+    location: str = "Unknown"
+    source_name: str
+    apply_url: str
+    skills: List[str] = Field(default_factory=list, sa_column=Column(JSON))
+    saved_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class Application(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    job_external_id: str = Field(index=True, unique=True)
+    job_title: str
+    company_name: str
+    location: str = "Unknown"
+    source_name: str
+    apply_url: str
+    skills: List[str] = Field(default_factory=list, sa_column=Column(JSON))
+    status: str = "applied"  # e.g., applied, interviewing, offered, rejected
+    applied_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    notes: str = ""

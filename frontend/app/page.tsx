@@ -1,4 +1,6 @@
-import { Bookmark, BriefcaseBusiness, CheckCircle2, MapPin, SlidersHorizontal } from "lucide-react";
+import { SlidersHorizontal, MapPin, BriefcaseBusiness, Bookmark, CheckCircle2 } from "lucide-react";
+import Navigation from "./components/Navigation";
+import JobCard from "./components/JobCard";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000";
 
@@ -10,6 +12,7 @@ const MOCK_RECOMMENDATIONS = [
       company_name: "NovaSkill Labs",
       location: "Bangalore",
       source_name: "Direct",
+      apply_url: "https://example.com",
       skills: ["Python", "APIs", "SQL"]
     },
     score_label: "Strong Match",
@@ -22,6 +25,7 @@ const MOCK_RECOMMENDATIONS = [
       company_name: "VectorBridge AI",
       location: "Remote",
       source_name: "LinkedIn",
+      apply_url: "https://example.com",
       skills: ["Python", "RAG", "LLMs"]
     },
     score_label: "Good Match",
@@ -31,7 +35,6 @@ const MOCK_RECOMMENDATIONS = [
 
 async function getRecommendations() {
   try {
-    // 1. Try to get personalized recommendations from latest profile
     const personalizedRes = await fetch(`${API_BASE_URL}/api/v1/recommendations/latest-profile`, {
       next: { revalidate: 0 },
     });
@@ -39,19 +42,13 @@ async function getRecommendations() {
     if (personalizedRes.ok) {
       const data = await personalizedRes.json();
       if (data.status === "personalized") {
-        return {
-          items: data.items,
-          status: "personalized",
-        };
+        return { items: data.items, status: "personalized" };
       }
     }
 
-    // 2. If no profile exists or that fails, try the demo POST endpoint
     const demoRes = await fetch(`${API_BASE_URL}/api/v1/recommendations`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         preferred_roles: ["Python Developer", "AI Intern", "Data Analyst"],
         skills: ["Python", "MySQL", "RAG", "APIs"],
@@ -65,30 +62,41 @@ async function getRecommendations() {
 
     if (demoRes.ok) {
       const items = await demoRes.json();
-      return {
-        items: items,
-        status: "demo",
-      };
+      return { items: items, status: "demo" };
     }
 
-    // 3. Absolute fallback to mock data
+    return { items: MOCK_RECOMMENDATIONS, status: "offline" };
+  } catch (e) {
+    return { items: MOCK_RECOMMENDATIONS, status: "offline" };
+  }
+}
+
+async function getUserJobStats() {
+  try {
+    const [savedRes, appliedRes] = await Promise.all([
+      fetch(`${API_BASE_URL}/api/v1/saved-jobs`, { next: { revalidate: 0 } }),
+      fetch(`${API_BASE_URL}/api/v1/applications`, { next: { revalidate: 0 } })
+    ]);
+
+    const saved = savedRes.ok ? (await savedRes.json()).items : [];
+    const applied = appliedRes.ok ? (await appliedRes.json()).items : [];
+
     return {
-      items: MOCK_RECOMMENDATIONS,
-      status: "offline",
+      savedIds: saved.map((j: any) => j.job_external_id),
+      appliedIds: applied.map((a: any) => a.job_external_id)
     };
   } catch (e) {
-    console.error("Failed to fetch jobs from backend, using mock data:", e);
-    return {
-      items: MOCK_RECOMMENDATIONS,
-      status: "offline",
-    };
+    return { savedIds: [], appliedIds: [] };
   }
 }
 
 export const dynamic = 'force-dynamic';
 
 export default async function Home() {
-  const { items: recommendations, status } = await getRecommendations();
+  const [{ items: recommendations, status }, { savedIds, appliedIds }] = await Promise.all([
+    getRecommendations(),
+    getUserJobStats()
+  ]);
   
   const statusMessage = status === "personalized" 
     ? "Recommendations based on your saved profile."
@@ -100,9 +108,12 @@ export default async function Home() {
     <main className="page-shell">
       <header className="topbar">
         <div className="topbar-inner">
-          <div>
-            <p className="brand">Job-Ops</p>
-            <h1>AI Fresher Job Matcher</h1>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '40px' }}>
+            <div>
+              <p className="brand">Job-Ops</p>
+              <h1>AI Fresher Job Matcher</h1>
+            </div>
+            <Navigation />
           </div>
           <button className="filter-button">
             <SlidersHorizontal size={16} />
@@ -146,44 +157,14 @@ export default async function Home() {
 
           <div className="job-list">
             {recommendations.map((rec: any) => (
-              <article key={rec.job.external_id} className="job-card">
-                <div className="job-main">
-                  <div>
-                    <div className="title-row">
-                      <h3>{rec.job.title}</h3>
-                      <span className="match-label">{rec.score_label}</span>
-                    </div>
-                    <p className="company">{rec.job.company_name}</p>
-                    <div className="meta-row">
-                      <span>
-                        <MapPin size={15} />
-                        {rec.job.location}
-                      </span>
-                      <span>
-                        <BriefcaseBusiness size={15} />
-                        {rec.job.source_name}
-                      </span>
-                    </div>
-                    <div className="tag-row">
-                      {rec.job.skills.map((tag: string) => (
-                        <span key={tag}>{tag}</span>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="action-column">
-                    <div className="score-badge">{rec.final_score}</div>
-                    <div className="icon-actions">
-                      <button aria-label="Save job">
-                        <Bookmark size={16} />
-                      </button>
-                      <button aria-label="Mark applied">
-                        <CheckCircle2 size={16} />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </article>
+              <JobCard 
+                key={rec.job.external_id} 
+                job={rec.job} 
+                score_label={rec.score_label}
+                final_score={rec.final_score}
+                initialSaved={savedIds.includes(rec.job.external_id)}
+                initialApplied={appliedIds.includes(rec.job.external_id)}
+              />
             ))}
           </div>
         </section>

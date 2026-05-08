@@ -4,16 +4,17 @@ AI Fresher Job Matcher is a fresher-focused job discovery platform. It builds a 
 
 This project intentionally avoids making resume rewriting or auto-apply the core flow.
 
-### 🚀 Current Status: MVP persistent slice
-- [x] **Backend**: FastAPI + SQLModel + PostgreSQL (Supabase/Local).
-- [x] **Persistence**: Candidates can save their extracted/reviewed profiles.
-- [x] **Personalization**: Dashboard job recommendations are ranked based on the latest saved profile.
-- [x] **Demo Mode**: Graceful fallback to seed data if no profile is saved.
+### Core Features (v0.1.0 MVP)
+- **AI-Powered Matching**: Personalized job ranking based on skills and preferences.
+- **Resume Parsing**: Direct extraction of profile data from PDF resumes.
+- **Job Persistence**: Full PostgreSQL storage for user profiles.
+- **Saved & Applied Tracking**: Bookmarking and application history with live backend updates.
+- **Intelligent Fallbacks**: Robust dashboard that works even when offline or without a profile.
 
-### 🛠️ Core Stack
-- **Frontend**: Next.js 15, TypeScript, Vanilla CSS (Premium Glassmorphism).
+### Current Tech Stack
 - **Backend**: FastAPI, SQLModel (PostgreSQL), Pydantic v2.
-- **AI**: Google Gemini (Flash 1.5) for resume parsing.
+- **Frontend**: Next.js 15 (App Router), Lucide Icons, Vanilla CSS.
+- **Testing**: Pytest with in-memory SQLite isolation.
 
 ---
 
