@@ -1,42 +1,75 @@
-# 🚀 Job-Ops: AI Fresher Job Matcher
+# Job-Ops
 
-Job-Ops is a sophisticated job discovery and recommendation platform specifically engineered for **freshers, interns, and early-career candidates**. By leveraging AI to parse resumes and aggregate listings from diverse sources, Job-Ops eliminates the noise of traditional job boards and connects you with the right opportunities.
+AI Fresher Job Matcher is a fresher-focused job discovery platform. It builds a structured profile from one resume, gathers jobs from public and ATS-style sources, and recommends roles by skill, location, work mode, and fresher suitability.
 
----
+This project intentionally avoids making resume rewriting or auto-apply the core flow.
 
-## 🌟 Key Features
+## Current Status
 
-- **One-Time Resume Parsing**: Upload your resume once and let our AI build your professional profile.
-- **Intelligent Aggregation**: Scours premium ATS boards (Greenhouse, Lever, Ashby) and startup-friendly sources like YC Work at a Startup and Wellfound.
-- **Precision Matching**: Jobs are ranked based on profile fit using a combination of heuristic rules and semantic similarity.
-- **Fresher-First Filter**: Automatically identifies and prioritizes entry-level roles, internships, and remote-friendly opportunities.
-- **Centralized Dashboard**: Manage your career search from a single, intuitive interface.
+Planning docs and seed data are ready. The codebase is scaffolded and the first vertical slice (Backend + Frontend) is running with seed data.
 
-## 🏗️ Project Architecture
+- `frontend/` - Next.js app
+- `backend/` - FastAPI app
+- `data/seed_jobs.json` - synthetic seed listings for development
+- `docs/` - product, architecture, API, database, matching, and handoff docs
 
-This repository contains the core logic and documentation for the Job-Ops platform.
+## Local Development Setup
 
-- `data/`: Contains seed data and job aggregation schemas.
-- `docs/`: Extensive documentation covering PRD, Architecture, Matching Logic, and more.
+### Prerequisites
+- Python 3.13+
+- Node.js v22+
+- npm (on Windows, use `npm.cmd` if blocked by execution policy)
 
-## 🚀 Getting Started
+### Backend Setup
+1. Navigate to the backend directory:
+   ```bash
+   cd backend
+   ```
+2. Create a virtual environment:
+   ```bash
+   python -m venv .venv
+   ```
+3. Activate the virtual environment:
+   - Windows: `.venv\Scripts\activate`
+   - Mac/Linux: `source .venv/bin/activate`
+4. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+5. Run tests:
+   ```bash
+   python -m pytest
+   ```
+6. Start the FastAPI server:
+   ```bash
+   python -m uvicorn app.main:app --reload
+   ```
+   The API will be available at `http://localhost:8000`.
 
-*(Development is in the initial phases. Stay tuned for the implementation details!)*
+### Frontend Setup
+1. Navigate to the frontend directory:
+   ```bash
+   cd frontend
+   ```
+2. Install dependencies:
+   ```bash
+   npm.cmd install
+   ```
+3. Start the Next.js dev server:
+   ```bash
+   npm.cmd run dev
+   ```
+   The dashboard will be available at `http://localhost:3000`.
 
-1. **Explore the Docs**: Dive into the `docs/` folder to understand the vision and technical roadmap.
-2. **Setup**: (Coming Soon)
+## Architecture
+- **Frontend**: Next.js (App Router), Tailwind CSS.
+- **Backend**: FastAPI, Pydantic, Rule-based matching engine.
+- **Data**: Seed jobs available in `data/seed_jobs.json`.
 
----
-
-## 🛠️ Tech Stack (Proposed)
-
-- **Frontend**: Next.js / React
-- **Backend**: Node.js / Express
-- **Database**: PostgreSQL / Supabase
-- **AI/ML**: OpenAI / Gemini for Resume Parsing & Semantic Matching
-
----
-
-## 📄 License
-
-This project is licensed under the MIT License.
+## Documentation
+For more details, see the `docs/` directory:
+- `ARCHITECTURE.md` - Technical overview
+- `API_CONTRACT.md` - Endpoint specifications
+- `DATABASE_SCHEMA.md` - Data models
+- `MATCHING_LOGIC.md` - How jobs are ranked
+- `AI_WORKFLOW.md` - How LLMs are integrated
