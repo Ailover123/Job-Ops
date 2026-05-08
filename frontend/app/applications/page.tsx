@@ -1,4 +1,4 @@
-import { ArrowLeft, CheckCircle2 } from "lucide-react";
+import { ClipboardList } from "lucide-react";
 import Link from "next/link";
 import Navigation from "../components/Navigation";
 import JobCard from "../components/JobCard";
@@ -44,43 +44,42 @@ export default async function ApplicationsPage() {
     <main className="page-shell">
       <header className="topbar">
         <div className="topbar-inner">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '40px' }}>
+          <div className="topbar-left">
             <div>
               <p className="brand">Job-Ops</p>
               <h1>Applications</h1>
             </div>
             <Navigation />
           </div>
-          <Link href="/" className="filter-button">
-            <ArrowLeft size={16} />
-            Back to Dashboard
-          </Link>
         </div>
       </header>
 
       <section className="dashboard-layout" style={{ gridTemplateColumns: '1fr' }}>
-        <section style={{ maxWidth: '800px', margin: '0 auto', width: '100%' }}>
+        <section style={{ maxWidth: '780px', margin: '0 auto', width: '100%' }}>
           <div className="section-heading">
             <div>
               <h2>Tracked Applications</h2>
-              <p>Monitor the status of your job hunt.</p>
+              <p>Jobs you've marked as applied.</p>
             </div>
-            <strong>{apps.length} applications</strong>
+            <strong>{apps.length} applied</strong>
           </div>
 
           {apps.length === 0 ? (
             <div className="empty-state">
+              <div className="empty-state-icon">
+                <ClipboardList size={40} />
+              </div>
               <h3>No applications recorded</h3>
-              <p>Apply to jobs from your recommendations or saved list and mark them as applied.</p>
-              <Link href="/" className="button-primary" style={{ display: 'inline-flex', alignItems: 'center', height: '40px', textDecoration: 'none' }}>
+              <p>Apply to jobs from your recommendations and mark them as applied to track here.</p>
+              <Link href="/" className="button-primary">
                 View Recommendations
               </Link>
             </div>
           ) : (
             <div className="job-list">
               {apps.map((app: any) => (
-                <div key={app.job_external_id} style={{ position: 'relative' }}>
-                  <JobCard 
+                <div key={app.job_external_id}>
+                  <JobCard
                     job={{
                       external_id: app.job_external_id,
                       title: app.job_title,
@@ -89,15 +88,15 @@ export default async function ApplicationsPage() {
                       source_name: app.source_name,
                       apply_url: app.apply_url,
                       skills: app.skills || []
-                    }} 
+                    }}
                     score_label={app.status.toUpperCase()}
                     final_score={100}
                     initialSaved={savedIds.includes(app.job_external_id)}
                     initialApplied={true}
                   />
-                  <div style={{ padding: '0 16px 16px', background: '#ffffff', border: '1px solid #e2e8f0', borderTop: 'none', borderRadius: '0 0 8px 8px', marginTop: '-8px', fontSize: '13px', color: '#64748b', display: 'flex', justifyContent: 'space-between' }}>
-                    <span>Applied on: {new Date(app.applied_at).toLocaleDateString()}</span>
-                    {app.notes && <span style={{ fontStyle: 'italic' }}>Note: {app.notes}</span>}
+                  <div className="app-footer">
+                    <span>Applied on {new Date(app.applied_at).toLocaleDateString()}</span>
+                    {app.notes && <span className="note">Note: {app.notes}</span>}
                   </div>
                 </div>
               ))}

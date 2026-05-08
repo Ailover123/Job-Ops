@@ -41,14 +41,12 @@ export default function JobCard({
     setLoading(true);
     try {
       if (isSaved) {
-        // Unsave
         const res = await fetch(`${API_BASE_URL}/api/v1/saved-jobs/${job.external_id}`, {
           method: "DELETE",
         });
         if (res.ok) setIsSaved(false);
         else throw new Error("Failed to unsave");
       } else {
-        // Save
         const res = await fetch(`${API_BASE_URL}/api/v1/saved-jobs`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -101,7 +99,7 @@ export default function JobCard({
   return (
     <article className="job-card">
       <div className="job-main">
-        <div>
+        <div className="job-content">
           <div className="title-row">
             <h3>{job.title}</h3>
             <span className="match-label">{score_label}</span>
@@ -109,11 +107,11 @@ export default function JobCard({
           <p className="company">{job.company_name}</p>
           <div className="meta-row">
             <span>
-              <MapPin size={15} />
+              <MapPin size={14} />
               {job.location}
             </span>
             <span>
-              <BriefcaseBusiness size={15} />
+              <BriefcaseBusiness size={14} />
               {job.source_name}
             </span>
           </div>
@@ -122,41 +120,36 @@ export default function JobCard({
               <span key={tag}>{tag}</span>
             ))}
           </div>
-          <div style={{ marginTop: '16px' }}>
-            <a 
-              href={job.apply_url} 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="nav-link" 
-              style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#0f766e' }}
-              onClick={() => {
-                // Auto mark as applied when clicking apply link? 
-                // Maybe too aggressive, let user decide.
-              }}
-            >
-              View on {job.source_name} <ExternalLink size={14} />
-            </a>
-          </div>
+          <a
+            href={job.apply_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="apply-link"
+          >
+            View on {job.source_name} <ExternalLink size={13} />
+          </a>
         </div>
 
         <div className="action-column">
           <div className="score-badge">{final_score}</div>
           <div className="icon-actions">
-            <button 
+            <button
+              title={isSaved ? "Unsave job" : "Save job"}
               aria-label={isSaved ? "Unsave job" : "Save job"}
               className={isSaved ? "active" : ""}
               onClick={toggleSave}
               disabled={loading}
             >
-              <Bookmark size={16} fill={isSaved ? "currentColor" : "none"} />
+              <Bookmark size={15} fill={isSaved ? "currentColor" : "none"} />
             </button>
-            <button 
+            <button
+              title={isApplied ? "Applied" : "Mark as applied"}
               aria-label={isApplied ? "Applied" : "Mark applied"}
               className={isApplied ? "applied" : ""}
               onClick={markApplied}
               disabled={loading || isApplied}
             >
-              <CheckCircle2 size={16} fill={isApplied ? "currentColor" : "none"} />
+              <CheckCircle2 size={15} fill={isApplied ? "currentColor" : "none"} />
             </button>
           </div>
         </div>

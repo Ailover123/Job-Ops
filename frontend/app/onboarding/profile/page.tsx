@@ -1,11 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { 
-  User, Mail, Phone, MapPin, 
-  BookOpen, Briefcase, Award, 
+import {
+  User, Mail, Phone, MapPin,
+  BookOpen, Briefcase, Award,
   Save, AlertCircle, Loader2,
-  CheckCircle2, Plus, Trash2, X
+  CheckCircle2, Plus, X
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -51,7 +51,7 @@ export default function ProfileReview() {
         });
 
         if (!response.ok) throw new Error("Failed to extract profile structured data.");
-        
+
         const data = await response.json();
         setProfile(data.profile);
       } catch (err: any) {
@@ -82,9 +82,8 @@ export default function ProfileReview() {
         const errorData = await response.json();
         throw new Error(errorData.detail || "Failed to save profile.");
       }
-      
+
       setSaveSuccess(true);
-      // Wait a moment for the user to see the success message
       setTimeout(() => {
         router.push("/");
       }, 1500);
@@ -97,11 +96,11 @@ export default function ProfileReview() {
 
   if (loading || extracting) {
     return (
-      <main className="page-shell" style={{ display: 'grid', placeItems: 'center', background: '#f8fafc' }}>
+      <main className="centered-page">
         <div style={{ textAlign: 'center' }}>
-          <Loader2 size={48} className="animate-spin" style={{ color: '#0f766e', marginBottom: '16px' }} />
-          <h2 style={{ fontSize: '20px', fontWeight: 600 }}>Analyzing your profile...</h2>
-          <p style={{ color: '#64748b' }}>Our AI is structuring your experience.</p>
+          <Loader2 size={40} className="animate-spin" style={{ color: '#0f766e', marginBottom: '12px' }} />
+          <h2 style={{ fontSize: '18px', fontWeight: 600 }}>Analyzing your profile...</h2>
+          <p style={{ color: '#94a3b8', fontSize: '13px' }}>Our AI is structuring your experience.</p>
         </div>
       </main>
     );
@@ -109,11 +108,11 @@ export default function ProfileReview() {
 
   if (error || !profile) {
     return (
-      <main className="page-shell" style={{ display: 'grid', placeItems: 'center', background: '#f8fafc' }}>
-        <div className="card" style={{ maxWidth: '400px', textAlign: 'center' }}>
-          <AlertCircle size={48} color="#ef4444" style={{ marginBottom: '16px' }} />
-          <h2>Something went wrong</h2>
-          <p style={{ color: '#64748b', marginBottom: '24px' }}>{error || "Could not load profile data."}</p>
+      <main className="centered-page">
+        <div className="card" style={{ maxWidth: '380px', textAlign: 'center' }}>
+          <AlertCircle size={40} color="#ef4444" style={{ marginBottom: '12px' }} />
+          <h2 style={{ fontSize: '16px' }}>Something went wrong</h2>
+          <p style={{ color: '#94a3b8', marginBottom: '20px', fontSize: '13px' }}>{error || "Could not load profile data."}</p>
           <Link href="/onboarding/resume" className="button-primary">Try Uploading Again</Link>
         </div>
       </main>
@@ -121,93 +120,79 @@ export default function ProfileReview() {
   }
 
   return (
-    <main className="page-shell" style={{ background: '#f8fafc', padding: '40px 20px' }}>
-      <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
+    <main className="page-shell" style={{ background: '#f8fafc', padding: '28px 16px' }}>
+      <div style={{ maxWidth: '760px', margin: '0 auto' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
           <div>
             <p className="brand">Step 2 of 3</p>
-            <h1 style={{ fontSize: '28px' }}>Review your profile</h1>
-            <p style={{ color: '#64748b' }}>Verify and edit the details extracted from your resume.</p>
+            <h1>Review your profile</h1>
+            <p style={{ color: '#94a3b8', fontSize: '13px', margin: 0 }}>Verify and edit the details extracted from your resume.</p>
           </div>
-          <button 
-            className="button-primary" 
+          <button
+            className="button-primary"
             onClick={handleSave}
             disabled={saving}
-            style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
           >
-            {saving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
+            {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
             {saving ? "Saving..." : "Save Profile"}
           </button>
         </div>
 
         {saveSuccess && (
-          <div style={{ 
-            background: '#ecfdf5', 
-            border: '1px solid #10b981', 
-            color: '#065f46', 
-            padding: '12px 16px', 
-            borderRadius: '8px',
-            marginBottom: '24px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px'
-          }}>
-            <CheckCircle2 size={18} />
-            Profile updated successfully! Continue to the next step.
+          <div className="success-banner">
+            <CheckCircle2 size={16} />
+            Profile saved! Redirecting to dashboard...
           </div>
         )}
 
-        <div style={{ display: 'grid', gap: '24px' }}>
+        <div style={{ display: 'grid', gap: '16px' }}>
           {/* Personal Info */}
           <section className="card" style={{ textAlign: 'left' }}>
-            <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px', borderBottom: '1px solid #f1f5f9', paddingBottom: '12px' }}>
-              <User size={20} color="#0f766e" /> Personal Details
+            <h3 className="card-header">
+              <User size={18} /> Personal Details
             </h3>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '16px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px' }}>
               <div className="input-group">
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#64748b', marginBottom: '4px' }}>Full Name</label>
-                <input 
-                  type="text" 
-                  value={profile.full_name} 
+                <label className="input-label">Full Name</label>
+                <input
+                  type="text"
+                  value={profile.full_name}
                   onChange={(e) => setProfile({...profile, full_name: e.target.value})}
-                  className="input-field" 
+                  className="input-field"
                 />
               </div>
               <div className="input-group">
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#64748b', marginBottom: '4px' }}>Email</label>
-                <div style={{ position: 'relative' }}>
-                  <Mail size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
-                  <input 
-                    type="email" 
-                    value={profile.email} 
+                <label className="input-label">Email</label>
+                <div className="input-icon-wrap">
+                  <Mail size={14} />
+                  <input
+                    type="email"
+                    value={profile.email}
                     onChange={(e) => setProfile({...profile, email: e.target.value})}
-                    className="input-field" 
-                    style={{ paddingLeft: '40px' }}
+                    className="input-field"
                   />
                 </div>
               </div>
               <div className="input-group">
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#64748b', marginBottom: '4px' }}>Phone</label>
-                <div style={{ position: 'relative' }}>
-                  <Phone size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
-                  <input 
-                    type="text" 
-                    value={profile.phone} 
+                <label className="input-label">Phone</label>
+                <div className="input-icon-wrap">
+                  <Phone size={14} />
+                  <input
+                    type="text"
+                    value={profile.phone}
                     onChange={(e) => setProfile({...profile, phone: e.target.value})}
-                    className="input-field" 
-                    style={{ paddingLeft: '40px' }}
+                    className="input-field"
                   />
                 </div>
               </div>
               <div className="input-group">
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#64748b', marginBottom: '4px' }}>Location</label>
-                <div style={{ position: 'relative' }}>
-                  <MapPin size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
-                  <input 
-                    type="text" 
-                    value={`${profile.location.city}, ${profile.location.country}`} 
-                    className="input-field" 
-                    style={{ paddingLeft: '40px' }}
+                <label className="input-label">Location</label>
+                <div className="input-icon-wrap">
+                  <MapPin size={14} />
+                  <input
+                    type="text"
+                    value={`${profile.location.city}, ${profile.location.country}`}
+                    className="input-field"
                     readOnly
                   />
                 </div>
@@ -217,49 +202,40 @@ export default function ProfileReview() {
 
           {/* Education */}
           <section className="card" style={{ textAlign: 'left' }}>
-            <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px', borderBottom: '1px solid #f1f5f9', paddingBottom: '12px' }}>
-              <BookOpen size={20} color="#0f766e" /> Education
+            <h3 className="card-header">
+              <BookOpen size={18} /> Education
             </h3>
             {profile.education.map((edu, idx) => (
-              <div key={idx} style={{ padding: '16px', background: '#f8fafc', borderRadius: '8px', marginBottom: '12px', position: 'relative' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+              <div key={idx} className="edu-card">
+                <div className="edu-card-grid">
                   <div>
-                    <p style={{ fontWeight: 600, fontSize: '14px' }}>{edu.degree || "Degree"}</p>
-                    <p style={{ color: '#64748b', fontSize: '13px' }}>{edu.institution || "Institution"}</p>
+                    <p style={{ fontWeight: 600, fontSize: '13px', marginBottom: '2px' }}>{edu.degree || "Degree"}</p>
+                    <p style={{ color: '#64748b', fontSize: '12px', margin: 0 }}>{edu.institution || "Institution"}</p>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <p style={{ fontWeight: 600, fontSize: '14px' }}>{edu.year || "Year"}</p>
-                    <p style={{ color: '#0f766e', fontSize: '13px', fontWeight: 500 }}>{edu.score || "N/A"}</p>
+                    <p style={{ fontWeight: 600, fontSize: '13px', marginBottom: '2px' }}>{edu.year || "Year"}</p>
+                    <p style={{ color: '#0f766e', fontSize: '12px', fontWeight: 500, margin: 0 }}>{edu.score || "N/A"}</p>
                   </div>
                 </div>
               </div>
             ))}
-            <button className="button-secondary" style={{ width: '100%', fontSize: '13px' }}>
+            <button className="button-secondary" style={{ width: '100%' }}>
               <Plus size={14} /> Add Education
             </button>
           </section>
 
           {/* Skills */}
           <section className="card" style={{ textAlign: 'left' }}>
-            <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px', borderBottom: '1px solid #f1f5f9', paddingBottom: '12px' }}>
-              <Award size={20} color="#0f766e" /> Skills & Expertise
+            <h3 className="card-header">
+              <Award size={18} /> Skills & Expertise
             </h3>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
               {profile.skills.map((skill, idx) => (
-                <div key={idx} style={{ 
-                  background: skill.type === "technical" ? "#f0f9ff" : "#f0fdf4", 
-                  color: skill.type === "technical" ? "#0369a1" : "#166534",
-                  border: `1px solid ${skill.type === "technical" ? "#bae6fd" : "#bbf7d0"}`,
-                  padding: '6px 12px',
-                  borderRadius: '20px',
-                  fontSize: '13px',
-                  fontWeight: 500,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px'
-                }}>
+                <div key={idx} className={`skill-pill ${skill.type === "technical" ? "technical" : "soft"}`}>
                   {skill.name}
-                  <X size={14} style={{ cursor: 'pointer', opacity: 0.5 }} />
+                  <button title={`Remove ${skill.name}`}>
+                    <X size={12} />
+                  </button>
                 </div>
               ))}
             </div>
@@ -267,20 +243,20 @@ export default function ProfileReview() {
 
           {/* Suggested Roles */}
           <section className="card" style={{ textAlign: 'left' }}>
-            <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px', borderBottom: '1px solid #f1f5f9', paddingBottom: '12px' }}>
-              <Briefcase size={20} color="#0f766e" /> Career Focus
+            <h3 className="card-header">
+              <Briefcase size={18} /> Career Focus
             </h3>
-            <p style={{ fontSize: '12px', fontWeight: 600, color: '#64748b', marginBottom: '8px' }}>SUGGESTED ROLES</p>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '16px' }}>
+            <p className="input-label">Suggested Roles</p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
               {profile.suggested_roles.map((role, idx) => (
-                <span key={idx} style={{ background: '#f1f5f9', padding: '4px 10px', borderRadius: '4px', fontSize: '13px' }}>{role}</span>
+                <span key={idx} className="role-tag">{role}</span>
               ))}
             </div>
           </section>
         </div>
 
-        <div style={{ marginTop: '40px', textAlign: 'center' }}>
-          <Link href="/dashboard" className="button-primary" style={{ padding: '12px 40px', textDecoration: 'none', display: 'inline-block' }}>
+        <div style={{ marginTop: '28px', textAlign: 'center' }}>
+          <Link href="/" className="button-primary" style={{ padding: '0 32px' }}>
             Go to Dashboard
           </Link>
         </div>

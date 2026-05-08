@@ -1,6 +1,7 @@
-import { SlidersHorizontal, MapPin, BriefcaseBusiness, Bookmark, CheckCircle2 } from "lucide-react";
+import { SlidersHorizontal } from "lucide-react";
 import Navigation from "./components/Navigation";
 import JobCard from "./components/JobCard";
+import Link from "next/link";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000";
 
@@ -99,24 +100,24 @@ export default async function Home() {
   ]);
   
   const statusMessage = status === "personalized" 
-    ? "Recommendations based on your saved profile."
+    ? "Ranked by your saved profile."
     : status === "demo"
-      ? "Showing preview data from live backend."
-      : "Showing preview data (Backend offline).";
+      ? "Showing preview data."
+      : "Preview mode (backend offline).";
 
   return (
     <main className="page-shell">
       <header className="topbar">
         <div className="topbar-inner">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '40px' }}>
+          <div className="topbar-left">
             <div>
               <p className="brand">Job-Ops</p>
-              <h1>AI Fresher Job Matcher</h1>
+              <h1>Dashboard</h1>
             </div>
             <Navigation />
           </div>
           <button className="filter-button">
-            <SlidersHorizontal size={16} />
+            <SlidersHorizontal size={14} />
             Filters
           </button>
         </div>
@@ -136,12 +137,17 @@ export default async function Home() {
             </div>
             <div>
               <p className="eyebrow">Preference</p>
-              <p>Remote or Bangalore, internship/full-time</p>
+              <p>Remote / Bangalore</p>
             </div>
           </div>
           {status !== "personalized" && (
-            <div style={{ marginTop: '20px', padding: '12px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', fontSize: '12px', border: '1px solid rgba(255,255,255,0.1)' }}>
-              <p style={{ opacity: 0.7 }}>Tip: Complete onboarding to see personalized matches.</p>
+            <div className="profile-tip">
+              <Link href="/onboarding/resume">Upload your resume</Link> to get personalized matches.
+            </div>
+          )}
+          {status === "personalized" && (
+            <div className="profile-tip" style={{ borderColor: '#ccfbf1', background: '#f0fdfa' }}>
+              ✓ Matched to your profile. <Link href="/onboarding/resume">Update resume</Link>
             </div>
           )}
         </aside>

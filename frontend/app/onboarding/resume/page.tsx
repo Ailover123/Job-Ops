@@ -12,23 +12,33 @@ export default function ResumeUpload() {
   const [errorMessage, setErrorMessage] = useState("");
   const [textPreview, setTextPreview] = useState("");
   const [textLength, setTextLength] = useState(0);
+  const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
-    if (selectedFile) {
-      if (selectedFile.type !== "application/pdf") {
-        setErrorMessage("Only PDF files are allowed.");
-        setStatus("error");
-        setFile(null);
-        return;
-      }
-      setFile(selectedFile);
-      setStatus("idle");
-      setErrorMessage("");
-      setTextPreview("");
-      setTextLength(0);
+    if (selectedFile) processFile(selectedFile);
+  };
+
+  const processFile = (selectedFile: File) => {
+    if (selectedFile.type !== "application/pdf") {
+      setErrorMessage("Only PDF files are allowed.");
+      setStatus("error");
+      setFile(null);
+      return;
     }
+    setFile(selectedFile);
+    setStatus("idle");
+    setErrorMessage("");
+    setTextPreview("");
+    setTextLength(0);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    const droppedFile = e.dataTransfer.files?.[0];
+    if (droppedFile) processFile(droppedFile);
   };
 
   const handleUpload = async () => {
@@ -52,16 +62,11 @@ export default function ResumeUpload() {
       }
 
       const data = await response.json();
-      console.log("Upload success:", data);
-      
-      // Store full extracted text for the next step
       localStorage.setItem("extracted_resume_text", data.extracted_text);
-      
       setTextPreview(data.text_preview);
       setTextLength(data.text_length);
       setStatus("success");
     } catch (err: any) {
-      console.error("Upload error:", err);
       setErrorMessage(err.message || "Could not connect to backend.");
       setStatus("error");
     }
@@ -83,24 +88,30 @@ export default function ResumeUpload() {
   };
 
   return (
-    <main className="page-shell" style={{ display: 'grid', placeItems: 'center', background: '#f1f5f9' }}>
-      <div className="card" style={{ maxWidth: '480px', width: '90%', textAlign: 'center' }}>
+    <main className="centered-page">
+      <div className="card" style={{ maxWidth: '440px', width: '100%', textAlign: 'center' }}>
         <p className="brand">Step 1 of 3</p>
-        <h1 style={{ marginBottom: '12px' }}>Upload your resume</h1>
-        <p style={{ color: '#64748b', marginBottom: '32px' }}>
+        <h1 style={{ marginBottom: '8px' }}>Upload your resume</h1>
+        <p style={{ color: '#64748b', marginBottom: '28px', fontSize: '13px' }}>
           We'll extract your skills and experience to find the best fresher roles.
         </p>
 
         {!file ? (
-          <div 
-            className="upload-zone"
+          <div
+            className={`upload-zone ${dragOver ? "dragover" : ""}`}
             onClick={() => fileInputRef.current?.click()}
+            onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={handleDrop}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') fileInputRef.current?.click(); }}
           >
-            <Upload size={48} color="#94a3b8" style={{ marginBottom: '16px' }} />
-            <p style={{ fontWeight: 600, marginBottom: '4px' }}>Click to upload or drag and drop</p>
-            <p style={{ color: '#64748b', fontSize: '14px' }}>PDF only (max 5MB)</p>
-            <input 
-              type="file" 
+            <Upload size={36} color="#94a3b8" style={{ marginBottom: '12px' }} />
+            <p style={{ fontWeight: 600, marginBottom: '2px', fontSize: '14px' }}>Click or drag to upload</p>
+            <p style={{ color: '#94a3b8', fontSize: '12px' }}>PDF only · max 5 MB</p>
+            <input
+              type="file"
               ref={fileInputRef}
               onChange={handleFileChange}
               accept=".pdf,application/pdf"
@@ -109,14 +120,14 @@ export default function ResumeUpload() {
           </div>
         ) : (
           <div className="file-info">
-            <FileText size={32} color="#0f766e" />
-            <div style={{ flex: 1, textAlign: 'left' }}>
-              <p style={{ fontWeight: 600, fontSize: '14px', marginBottom: '2px', wordBreak: 'break-all' }}>{file.name}</p>
-              <p style={{ color: '#64748b', fontSize: '12px' }}>{formatSize(file.size)}</p>
+            <FileText size={28} color="#0f766e" />
+            <div style={{ flex: 1, textAlign: 'left', minWidth: 0 }}>
+              <p style={{ fontWeight: 600, fontSize: '13px', marginBottom: '1px', wordBreak: 'break-all' }}>{file.name}</p>
+              <p style={{ color: '#94a3b8', fontSize: '11px', margin: 0 }}>{formatSize(file.size)}</p>
             </div>
             {status !== "uploading" && status !== "success" && (
-              <button onClick={clearFile} style={{ border: 'none', background: 'none', color: '#94a3b8' }}>
-                <X size={20} />
+              <button onClick={clearFile} style={{ border: 'none', background: 'none', color: '#94a3b8', cursor: 'pointer' }} title="Remove file">
+                <X size={18} />
               </button>
             )}
           </div>
@@ -129,60 +140,48 @@ export default function ResumeUpload() {
         )}
 
         {status === "error" && (
-          <div className="error-text" style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center' }}>
-            <AlertCircle size={16} />
+          <div className="error-text">
+            <AlertCircle size={14} />
             {errorMessage}
           </div>
         )}
 
         {status === "success" && (
-          <div className="success-text" style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center' }}>
-            <CheckCircle size={16} />
+          <div className="success-text">
+            <CheckCircle size={14} />
             Resume uploaded successfully!
           </div>
         )}
 
         {status === "success" && textPreview && (
-          <div style={{ marginTop: '24px', textAlign: 'left' }}>
-            <p style={{ fontSize: '12px', fontWeight: 600, color: '#64748b', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              Extracted Content Preview ({textLength} characters)
+          <div style={{ marginTop: '20px', textAlign: 'left' }}>
+            <p className="input-label">
+              Extracted Content ({textLength} chars)
             </p>
-            <div style={{ 
-              background: '#f8fafc', 
-              border: '1px solid #e2e8f0', 
-              borderRadius: '8px', 
-              padding: '12px', 
-              fontSize: '13px', 
-              color: '#334155',
-              maxHeight: '150px',
-              overflowY: 'auto',
-              whiteSpace: 'pre-wrap',
-              fontFamily: 'monospace'
-            }}>
+            <div className="preview-box">
               {textPreview}
               {textLength > textPreview.length && "..."}
             </div>
           </div>
         )}
 
-        <div style={{ marginTop: '32px', display: 'flex', gap: '12px', flexDirection: 'column' }}>
+        <div style={{ marginTop: '24px', display: 'flex', gap: '10px', flexDirection: 'column' }}>
           {status === "success" ? (
-            <Link href="/onboarding/profile" className="button-primary" style={{ display: 'grid', placeItems: 'center', textDecoration: 'none' }}>
+            <Link href="/onboarding/profile" className="button-primary">
               Continue to Profile
             </Link>
           ) : (
-            <button 
-              className="button-primary" 
+            <button
+              className="button-primary"
               onClick={handleUpload}
               disabled={!file || status === "uploading"}
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
             >
-              {status === "uploading" && <Loader2 size={18} className="animate-spin" />}
+              {status === "uploading" && <Loader2 size={16} className="animate-spin" />}
               {status === "uploading" ? "Uploading..." : "Upload & Analyze"}
             </button>
           )}
-          
-          <Link href="/" style={{ color: '#64748b', fontSize: '14px', textDecoration: 'none' }}>
+
+          <Link href="/" style={{ color: '#94a3b8', fontSize: '13px', textDecoration: 'none', textAlign: 'center' }}>
             Skip for now
           </Link>
         </div>

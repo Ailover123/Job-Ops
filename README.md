@@ -31,9 +31,9 @@ This project intentionally avoids making resume rewriting or auto-apply the core
 
 ## Screenshots
 
-| Home Page | Resume Upload | Profile Review |
-| :---: | :---: | :---: |
-| ![Home](docs/assets/home.png) | ![Upload](docs/assets/upload.png) | ![Review](docs/assets/review.png) |
+| Dashboard | Resume Upload | Saved Jobs | Applications |
+| :---: | :---: | :---: | :---: |
+| ![Dashboard](docs/assets/home.png) | ![Upload](docs/assets/upload.png) | ![Saved](docs/assets/saved.png) | ![Applications](docs/assets/applications.png) |
 
 ## Local Development Setup
 
