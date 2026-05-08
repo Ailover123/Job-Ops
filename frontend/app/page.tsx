@@ -29,9 +29,25 @@ const MOCK_RECOMMENDATIONS = [
   }
 ];
 
-async function getJobs() {
+async function getRecommendations() {
   try {
-    const res = await fetch(`${API_BASE_URL}/api/v1/recommendations`, {
+    // 1. Try to get personalized recommendations from latest profile
+    const personalizedRes = await fetch(`${API_BASE_URL}/api/v1/recommendations/latest-profile`, {
+      next: { revalidate: 0 },
+    });
+
+    if (personalizedRes.ok) {
+      const data = await personalizedRes.json();
+      if (data.status === "personalized") {
+        return {
+          items: data.items,
+          status: "personalized",
+        };
+      }
+    }
+
+    // 2. If no profile exists or that fails, try the demo POST endpoint
+    const demoRes = await fetch(`${API_BASE_URL}/api/v1/recommendations`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -44,25 +60,42 @@ async function getJobs() {
         job_types: ["internship", "full_time"],
         experience_level: "fresher",
       }),
-      next: { revalidate: 0 }, // Disable cache for dev
+      next: { revalidate: 0 },
     });
 
-    if (!res.ok) {
-      console.warn("Backend API returned an error, using mock data.");
-      return MOCK_RECOMMENDATIONS;
+    if (demoRes.ok) {
+      const items = await demoRes.json();
+      return {
+        items: items,
+        status: "demo",
+      };
     }
-    return res.json();
+
+    // 3. Absolute fallback to mock data
+    return {
+      items: MOCK_RECOMMENDATIONS,
+      status: "offline",
+    };
   } catch (e) {
     console.error("Failed to fetch jobs from backend, using mock data:", e);
-    return MOCK_RECOMMENDATIONS;
+    return {
+      items: MOCK_RECOMMENDATIONS,
+      status: "offline",
+    };
   }
 }
 
 export const dynamic = 'force-dynamic';
 
 export default async function Home() {
-  const recommendations = await getJobs();
-  const isDemoMode = recommendations === MOCK_RECOMMENDATIONS;
+  const { items: recommendations, status } = await getRecommendations();
+  
+  const statusMessage = status === "personalized" 
+    ? "Recommendations based on your saved profile."
+    : status === "demo"
+      ? "Showing preview data from live backend."
+      : "Showing preview data (Backend offline).";
+
   return (
     <main className="page-shell">
       <header className="topbar">
@@ -95,17 +128,18 @@ export default async function Home() {
               <p>Remote or Bangalore, internship/full-time</p>
             </div>
           </div>
+          {status !== "personalized" && (
+            <div style={{ marginTop: '20px', padding: '12px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', fontSize: '12px', border: '1px solid rgba(255,255,255,0.1)' }}>
+              <p style={{ opacity: 0.7 }}>Tip: Complete onboarding to see personalized matches.</p>
+            </div>
+          )}
         </aside>
 
         <section>
           <div className="section-heading">
             <div>
               <h2>Recommended Jobs</h2>
-              <p>
-                {isDemoMode 
-                  ? "Showing preview data (Backend offline)." 
-                  : "Seed data preview from live local backend."}
-              </p>
+              <p>{statusMessage}</p>
             </div>
             <strong>{recommendations.length} matches</strong>
           </div>

@@ -4,22 +4,29 @@ AI Fresher Job Matcher is a fresher-focused job discovery platform. It builds a 
 
 This project intentionally avoids making resume rewriting or auto-apply the core flow.
 
-## Current Status
+### 🚀 Current Status: MVP persistent slice
+- [x] **Backend**: FastAPI + SQLModel + PostgreSQL (Supabase/Local).
+- [x] **Persistence**: Candidates can save their extracted/reviewed profiles.
+- [x] **Personalization**: Dashboard job recommendations are ranked based on the latest saved profile.
+- [x] **Demo Mode**: Graceful fallback to seed data if no profile is saved.
 
-The application now supports **PostgreSQL persistence** for user profiles. The initial onboarding flow is functional, from resume upload to profile saving.
+### 🛠️ Core Stack
+- **Frontend**: Next.js 15, TypeScript, Vanilla CSS (Premium Glassmorphism).
+- **Backend**: FastAPI, SQLModel (PostgreSQL), Pydantic v2.
+- **AI**: Google Gemini (Flash 1.5) for resume parsing.
 
-- **Backend**: FastAPI with SQLModel (SQLAlchemy + Pydantic v2).
-- **Frontend**: Next.js (App Router) with persistent state management.
-- **Database**: PostgreSQL (Supabase recommended for dev).
+---
 
-## Application Flow
+### 📡 Application Flow
 
-1. **Resume Upload**: User uploads a PDF resume.
-2. **Text Extraction**: System extracts raw text using `pypdf`.
-3. **Profile Extraction**: AI (Gemini) structures the text into a detailed profile.
-4. **Profile Review**: User reviews and edits the extracted details.
-5. **Save Profile**: Profile is persisted in PostgreSQL.
-6. **Dashboard**: User receives personalized job recommendations.
+1. **Onboarding**: User uploads a PDF resume.
+2. **Extraction**: Backend uses Gemini to parse technical skills, roles, and experience.
+3. **Review**: User confirms or edits the extracted data.
+4. **Persistence**: Profile is saved to PostgreSQL.
+5. **Dashboard**: 
+   - Backend fetches the latest profile.
+   - Matching engine ranks seed jobs against user's specific skills and roles.
+   - Dashboard displays personalized matches with "Strong", "Good", or "Possible" labels.
 
 ## Screenshots
 

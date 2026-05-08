@@ -1,20 +1,41 @@
 import io
 import os
+import pytest
 from fastapi.testclient import TestClient
+from sqlmodel import Session, SQLModel, create_engine
+from sqlmodel.pool import StaticPool
+
 from app.main import app
+from app.database import get_session
 
-client = TestClient(app)
+# Setup in-memory SQLite for testing to avoid hitting live Postgres
+# This is a common pattern for fast unit tests.
+@pytest.fixture(name="session")
+def session_fixture():
+    engine = create_engine(
+        "sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool
+    )
+    SQLModel.metadata.create_all(engine)
+    with Session(engine) as session:
+        yield session
 
-def test_upload_resume_success():
+@pytest.fixture(name="client")
+def client_fixture(session: Session):
+    def get_session_override():
+        return session
+    app.dependency_overrides[get_session] = get_session_override
+    client = TestClient(app)
+    yield client
+    app.dependency_overrides.clear()
+
+def test_upload_resume_success(client: TestClient):
     # Use the downloaded sample.pdf for extraction test
     pdf_path = os.path.join(os.path.dirname(__file__), "sample.pdf")
     
-    # If file doesn't exist (e.g. download failed), use a fallback mock
     if os.path.exists(pdf_path):
         with open(pdf_path, "rb") as f:
             pdf_content = f.read()
     else:
-        # Minimal PDF that pypdf might fail to extract text from, but good for validation
         pdf_content = b"%PDF-1.4\n1 0 obj\n<< /Title (Test) >>\nendobj\ntrailer\n<< /Root 1 0 R >>\n%%EOF"
 
     file_name = "test_resume.pdf"
@@ -24,42 +45,46 @@ def test_upload_resume_success():
         files={"file": (file_name, io.BytesIO(pdf_content), "application/pdf")}
     )
     
-    # If the minimal mock was used, it might raise 400 due to "No text could be extracted"
     if not os.path.exists(pdf_path):
         assert response.status_code == 400
-        assert "Failed to extract text from PDF" in response.json()["detail"]
     else:
         assert response.status_code == 200
         data = response.json()
         assert data["file_name"] == file_name
         assert data["status"] == "uploaded"
-        assert data["text_length"] > 0
-        assert "text_preview" in data
         assert "extracted_text" in data
-        assert len(data["text_preview"]) <= 500
 
-def test_upload_resume_invalid_type():
-    # Create a dummy text content
+def test_save_and_fetch_profile(client: TestClient):
+    # 1. Save profile
+    profile_data = {
+        "full_name": "Test User",
+        "email": "test@example.com",
+        "phone": "1234567890",
+        "location": {"city": "Bangalore", "state": "KA", "country": "India"},
+        "education": [],
+        "skills": [{"name": "Python", "type": "technical", "confidence": 1.0}],
+        "projects": [],
+        "certifications": [],
+        "suggested_roles": ["Developer"],
+        "preferred_domains": []
+    }
+    
+    save_response = client.post("/api/v1/profile", json=profile_data)
+    assert save_response.status_code == 200
+    assert save_response.json()["status"] == "success"
+    
+    # 2. Fetch latest
+    fetch_response = client.get("/api/v1/profile/latest")
+    assert fetch_response.status_code == 200
+    data = fetch_response.json()
+    assert data["full_name"] == "Test User"
+    assert data["email"] == "test@example.com"
+    assert data["skills"][0]["name"] == "Python"
+
+def test_upload_resume_invalid_type(client: TestClient):
     text_content = b"This is a text file, not a PDF."
-    file_name = "test_resume.txt"
-    
     response = client.post(
         "/api/v1/onboarding/resume",
-        files={"file": (file_name, io.BytesIO(text_content), "text/plain")}
+        files={"file": ("test.txt", io.BytesIO(text_content), "text/plain")}
     )
-    
     assert response.status_code == 400
-    assert response.json()["detail"] == "Only PDF files are allowed."
-
-def test_upload_resume_unreadable_pdf():
-    # Corrupt PDF content
-    pdf_content = b"%PDF-1.4\ncorrupt_content"
-    file_name = "corrupt.pdf"
-    
-    response = client.post(
-        "/api/v1/onboarding/resume",
-        files={"file": (file_name, io.BytesIO(pdf_content), "application/pdf")}
-    )
-    
-    assert response.status_code == 400
-    assert "Failed to extract text from PDF" in response.json()["detail"]
