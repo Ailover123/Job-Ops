@@ -163,3 +163,28 @@ graph TD
   - Personalized recommendation streams
 
 
+## 12. Robust Deduplication Engine
+
+To ensure a clean job recommendation dashboard free of duplicates when combining seeded jobs and dynamic ATS crawls, a multi-tiered deduplication processor is active inside `app/seed_loader.py`.
+
+### 12.1 Field Normalization Standard
+Before comparison, fields are standard-normalized using dedicated routines:
+1. **Title Normalization**: Lowercases, strips common location/commitment tags (such as `remote`, `hybrid`, `full-time`, `part-time`), collapses punctuation, and trims extra spaces.
+2. **Company Normalization**: Lowercases, strips common business suffixes (like `inc`, `llc`, `ltd`, `corp`, `co`, `corporation`), collapses punctuation, and trims extra spaces.
+3. **Location Normalization**: Lowercases and collapses variations of remote locations (`remote`, `us remote`, `usa remote`, `anywhere`, `wfh`) directly to a single `"remote"` keyword.
+4. **URL Normalization**: Fully parses and normalizes job apply links, lowercasing the scheme/domain, converting the path to lowercase, stripping trailing slashes, and removing noisy tracking/query parameters (e.g. `?utm=source`).
+
+### 12.2 Multi-Tier Deduplication Hierarchy
+Jobs are processed sequentially. If a job triggers any of the following four tiers of matching against already-seen jobs, it is flagged as a duplicate and skipped:
+
+| Tier | Name | Match Conditions | Notes |
+|---|---|---|---|
+| **Tier 1** | **External ID** | `job.external_id` matches an existing ID. | Strongest signal. |
+| **Tier 2** | **Normalized URL** | `normalize_url(job.apply_url)` matches an existing URL. | Identifies duplicate listings posted across different systems. |
+| **Tier 3** | **Normalized Key** | Normalized `(company, title, location)` tuple matches. | Fallback check for same role/location variations. |
+| **Tier 4** | **Content Hash** | Normalized `company` matches and SHA-256 hash of cleaned `description` text matches. | Identifies identical description contents across different URLs/titles. |
+
+Seeded jobs are loaded first and thus hold precedence over crawl-imported duplicate listings.
+
+
+
