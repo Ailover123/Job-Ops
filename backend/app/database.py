@@ -16,22 +16,9 @@ def init_db():
     # Seeding database configurations inside execution in Phase 3
     with Session(engine) as session:
         # Check and seed default CollectorSource values if empty
-        from app.db_models import CollectorSource
-        from sqlmodel import select
-        
+        from app.seed_loader import seed_collector_sources
         try:
-            source_count = session.exec(select(CollectorSource)).first()
-            if not source_count:
-                print("Seeding database with default collector sources...")
-                sources = [
-                    CollectorSource(company_name="Cloudflare", board_token="cloudflare", source_type="greenhouse", enabled=True),
-                    CollectorSource(company_name="Stripe", board_token="stripe", source_type="greenhouse", enabled=True),
-                    CollectorSource(company_name="Lever", company_id="lever", source_type="lever", enabled=True),
-                    CollectorSource(company_name="Vercel", company_id="vercel", source_type="lever", enabled=True)
-                ]
-                for src in sources:
-                    session.add(src)
-                session.commit()
+            seed_collector_sources(session)
         except Exception as e:
             print(f"Error seeding database with collector sources: {e}")
             session.rollback()

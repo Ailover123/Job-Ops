@@ -6,20 +6,19 @@ from sqlmodel import Session, select
 from app.collectors import GreenhouseCollector, LeverCollector
 from app.seed_loader import save_imported_jobs
 from app.database import engine
+from typing import List
+from app.internal_schemas import CollectorSourceCreate, CollectorSourceUpdate, CollectorSourceResponse
 from app.db_models import CollectorSource
 from app.config import settings
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/internal", tags=["internal"])
 
-
 class GreenhouseCollectRequest(BaseModel):
-    board_token: str = "cloudflare"  # Default token useful for testing
-
+    board_token: str = "cloudflare"
 
 class LeverCollectRequest(BaseModel):
-    company_id: str = "lever"  # Default company id useful for testing
-
+    company_id: str = "lever"
 
 def verify_internal_key(x_internal_api_key: str | None = Header(None, alias="X-Internal-API-Key")):
     """
@@ -37,6 +36,66 @@ def verify_internal_key(x_internal_api_key: str | None = Header(None, alias="X-I
             status_code=403,
             detail="Forbidden: Invalid or missing X-Internal-API-Key header."
         )
+
+@router.get("/sources", response_model=List[CollectorSourceResponse], dependencies=[Depends(verify_internal_key)])
+def list_sources():
+    """List all configured collector sources."""
+    with Session(engine) as session:
+        return session.exec(select(CollectorSource)).all()
+
+@router.post("/sources", response_model=CollectorSourceResponse, dependencies=[Depends(verify_internal_key)])
+def create_source(source_in: CollectorSourceCreate):
+    """Add a new collector source config."""
+    with Session(engine) as session:
+        # Check for duplicates
+        existing = session.exec(
+            select(CollectorSource).where(
+                CollectorSource.company_name == source_in.company_name,
+                CollectorSource.enabled == True
+            )
+        ).first()
+        if existing:
+            raise HTTPException(status_code=400, detail="Active source with this company name already exists")
+        
+        db_source = CollectorSource.model_validate(source_in.model_dump())
+        session.add(db_source)
+        session.commit()
+        session.refresh(db_source)
+        return db_source
+
+@router.patch("/sources/{source_id}", response_model=CollectorSourceResponse, dependencies=[Depends(verify_internal_key)])
+def update_source(source_id: int, source_in: CollectorSourceUpdate):
+    """Update a collector source config."""
+    with Session(engine) as session:
+        db_source = session.get(CollectorSource, source_id)
+        if not db_source:
+            raise HTTPException(status_code=404, detail="Source not found")
+        
+        update_data = source_in.model_dump(exclude_unset=True)
+        for key, value in update_data.items():
+            setattr(db_source, key, value)
+        
+        db_source.updated_at = datetime.now(timezone.utc)
+        session.add(db_source)
+        session.commit()
+        session.refresh(db_source)
+        return db_source
+
+@router.delete("/sources/{source_id}", response_model=CollectorSourceResponse, dependencies=[Depends(verify_internal_key)])
+def delete_source(source_id: int):
+    """Soft-disable a collector source."""
+    with Session(engine) as session:
+        db_source = session.get(CollectorSource, source_id)
+        if not db_source:
+            raise HTTPException(status_code=404, detail="Source not found")
+        
+        db_source.enabled = False
+        db_source.updated_at = datetime.now(timezone.utc)
+        session.add(db_source)
+        session.commit()
+        session.refresh(db_source)
+        return db_source
+
 
 
 @router.post("/collect/greenhouse", dependencies=[Depends(verify_internal_key)])

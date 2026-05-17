@@ -485,6 +485,84 @@ All requests to `/internal/*` routes must include the following header:
 
 ---
 
+### GET `/internal/sources`
+Retrieves a list of all configured collector sources.
+
+**Request Headers:**
+- `X-Internal-API-Key`: `<secure-key>`
+
+**Response:** `200 OK`
+```json
+[
+  {
+    "id": 1,
+    "company_name": "Cloudflare",
+    "source_type": "greenhouse",
+    "board_token": "cloudflare",
+    "company_id": null,
+    "enabled": true,
+    "last_run_at": "2026-05-17T14:20:00Z",
+    "last_success_at": "2026-05-17T14:20:00Z",
+    "last_error": null
+  }
+]
+```
+
+---
+
+### POST `/internal/sources`
+Creates a new collector source configuration.
+
+**Request Headers:**
+- `X-Internal-API-Key`: `<secure-key>`
+
+**Request Body:**
+```json
+{
+  "company_name": "Vercel",
+  "source_type": "lever",
+  "company_id": "vercel"
+}
+```
+
+**Response:** `200 OK`
+```json
+{
+  "id": 2,
+  "company_name": "Vercel",
+  ...
+}
+```
+
+---
+
+### PATCH `/internal/sources/{source_id}`
+Updates an existing collector source (e.g., toggling the `enabled` state).
+
+**Request Headers:**
+- `X-Internal-API-Key`: `<secure-key>`
+
+**Request Body:**
+```json
+{
+  "enabled": false
+}
+```
+
+**Response:** `200 OK`
+
+---
+
+### DELETE `/internal/sources/{source_id}`
+Soft-disables an existing collector source by setting `enabled = False`.
+
+**Request Headers:**
+- `X-Internal-API-Key`: `<secure-key>`
+
+**Response:** `200 OK`
+
+---
+
 ### POST `/internal/collect/greenhouse`
 Triggers the Greenhouse job aggregator crawl to fetch new listings and persist them to the database.
 Ad-hoc endpoint — does **not** update `CollectorSource` audit fields.

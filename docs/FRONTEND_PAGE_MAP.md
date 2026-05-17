@@ -29,6 +29,9 @@ frontend/app/
 │   └── page.tsx                # Route: /roadmap (Skill Gap & AI Learning Roadmap)
 ├── saved/
 │   └── page.tsx                # Route: /saved (Job Bookmarks)
+├── internal/
+│   └── sources/
+│       └── page.tsx            # Route: /internal/sources (Admin Job Source Management)
 ├── components/                 # Global UI Shared Components
 │   ├── Navigation.tsx          # Shared Tab Navigation Bar
 │   └── JobCard.tsx             # Interactive Job Listing Card
@@ -134,6 +137,22 @@ Central tracking workspace monitoring active job pipelines.
   - Custom notepad tracking interviews, feedback, and calendar milestones per job.
 - **Network Actions:**
   - `PUT /applications/{job_external_id}` for editing status and notes.
+
+---
+
+### 9. Admin Job Source Management (`/internal/sources`)
+Internal tooling workspace to manage collector sources for aggregator scripts.
+
+- **Main Elements:**
+  - Secure authentication input requiring `X-Internal-API-Key`.
+  - Configured list of sources, displaying enablement and last execution states.
+  - Input form to define new Greenhouse or Lever collector sources.
+  - "Run Collect All" button to manually trigger a sync across all enabled sources.
+- **State Parameters:**
+  - `apiKey`: Stored and restored from browser `sessionStorage`.
+- **Network Actions:**
+  - `GET`, `POST`, `PATCH`, `DELETE` at `/internal/sources`
+  - `POST /internal/collect/all`
 
 ---
 

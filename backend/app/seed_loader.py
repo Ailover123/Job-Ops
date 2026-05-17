@@ -8,7 +8,7 @@ from urllib.parse import urlparse
 
 from sqlmodel import Session, select
 from app.database import engine
-from app.db_models import Job
+from app.db_models import Job, CollectorSource
 from app.models import SeedJob
 
 ROOT_DIR = Path(__file__).resolve().parents[2]
@@ -54,6 +54,20 @@ def load_imported_jobs() -> List[SeedJob]:
         print(f"Error loading imported jobs from database: {e}")
         return []
 
+def seed_collector_sources(session: Session):
+    """Seed initial configured job sources if none exist."""
+    source_count = session.exec(select(CollectorSource)).first()
+    if not source_count:
+        print("Seeding database with default collector sources...")
+        sources = [
+            CollectorSource(company_name="Cloudflare", board_token="cloudflare", source_type="greenhouse", enabled=True),
+            CollectorSource(company_name="Stripe", board_token="stripe", source_type="greenhouse", enabled=True),
+            CollectorSource(company_name="Lever", company_id="lever", source_type="lever", enabled=True),
+            CollectorSource(company_name="Vercel", company_id="vercel", source_type="lever", enabled=True)
+        ]
+        for src in sources:
+            session.add(src)
+        session.commit()
 
 
 def normalize_text(text: str) -> str:
