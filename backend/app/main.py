@@ -4,8 +4,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
-from app.routers import health, recommendations, onboarding, jobs
+from app.routers import health, recommendations, onboarding, jobs, preferences
 from app.database import init_db
+
 from contextlib import asynccontextmanager
 
 # Load environment variables
@@ -50,4 +51,6 @@ app.include_router(health.router)
 app.include_router(recommendations.router, prefix="/api/v1")
 app.include_router(onboarding.router, prefix="/api/v1")
 app.include_router(jobs.router, prefix="/api/v1")
+app.include_router(preferences.router, prefix="/api/v1")
+
 

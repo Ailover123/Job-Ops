@@ -113,3 +113,71 @@ def test_empty_lists(client: TestClient):
     response = client.get("/api/v1/applications")
     assert response.status_code == 200
     assert response.json()["items"] == []
+
+def test_update_application_status_and_notes(client: TestClient):
+    app_data = {
+        "job_external_id": "job_abc",
+        "job_title": "Software Engineer",
+        "company_name": "Antigravity",
+        "location": "Remote",
+        "source_name": "GitHub",
+        "apply_url": "https://github.com/careers/abc",
+        "skills": ["Python"]
+    }
+    # Record application
+    client.post("/api/v1/applications", json=app_data)
+    
+    # 1. Update both status and notes
+    response = client.put(
+        "/api/v1/applications/job_abc",
+        json={"status": "interviewing", "notes": "Got a call!"}
+    )
+    assert response.status_code == 200
+    assert response.json()["status"] == "success"
+    assert response.json()["item"]["status"] == "interviewing"
+    assert response.json()["item"]["notes"] == "Got a call!"
+    
+    # 2. Update status only, notes must remain "Got a call!"
+    response = client.put(
+        "/api/v1/applications/job_abc",
+        json={"status": "offer"}
+    )
+    assert response.status_code == 200
+    assert response.json()["item"]["status"] == "offer"
+    assert response.json()["item"]["notes"] == "Got a call!"
+    
+    # 3. Update notes only, status must remain "offer"
+    response = client.put(
+        "/api/v1/applications/job_abc",
+        json={"notes": "Offer of 200k!"}
+    )
+    assert response.status_code == 200
+    assert response.json()["item"]["status"] == "offer"
+    assert response.json()["item"]["notes"] == "Offer of 200k!"
+
+def test_update_application_validation_error(client: TestClient):
+    app_data = {
+        "job_external_id": "job_def",
+        "job_title": "Software Engineer",
+        "company_name": "Antigravity",
+        "location": "Remote",
+        "source_name": "GitHub",
+        "apply_url": "https://github.com/careers/def",
+        "skills": ["Python"]
+    }
+    client.post("/api/v1/applications", json=app_data)
+    
+    # Attempt update to invalid status value
+    response = client.put(
+        "/api/v1/applications/job_def",
+        json={"status": "hired"}  # invalid
+    )
+    assert response.status_code == 422
+
+def test_update_application_not_found(client: TestClient):
+    response = client.put(
+        "/api/v1/applications/non_existent_job",
+        json={"status": "interviewing"}
+    )
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Application not found"

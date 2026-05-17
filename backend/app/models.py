@@ -28,6 +28,8 @@ class CandidateProfile(BaseModel):
     remote_preference: str = "remote_or_hybrid"
     job_types: list[str] = Field(default_factory=lambda: ["internship", "full_time"])
     experience_level: str = "fresher"
+    willing_to_relocate: bool = False
+
 
 
 class Recommendation(BaseModel):

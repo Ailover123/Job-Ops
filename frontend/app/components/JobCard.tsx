@@ -102,7 +102,7 @@ export default function JobCard({
         <div className="job-content">
           <div className="title-row">
             <h3>{job.title}</h3>
-            <span className="match-label">{score_label}</span>
+            <span className={`match-label ${score_label.toLowerCase().replace(/\s+/g, "-")}`}>{score_label}</span>
           </div>
           <p className="company">{job.company_name}</p>
           <div className="meta-row">

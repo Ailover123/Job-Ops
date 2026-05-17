@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
-from typing import List
+from typing import List, Literal, Optional
 from datetime import datetime, timezone
 from pydantic import BaseModel
 
@@ -21,6 +21,10 @@ class JobActionRequest(BaseModel):
 class ApplicationRequest(JobActionRequest):
     status: str = "applied"
     notes: str = ""
+
+class ApplicationUpdateRequest(BaseModel):
+    status: Optional[Literal["applied", "interviewing", "rejected", "offer", "withdrawn"]] = None
+    notes: Optional[str] = None
 
 @router.post("/saved-jobs")
 async def save_job(request: JobActionRequest, session: Session = Depends(get_session)):
@@ -103,3 +107,25 @@ async def list_applications(session: Session = Depends(get_session)):
     statement = select(Application).order_by(Application.applied_at.desc())
     results = session.exec(statement).all()
     return {"items": results}
+
+@router.put("/applications/{job_external_id}")
+async def update_application(
+    job_external_id: str,
+    request: ApplicationUpdateRequest,
+    session: Session = Depends(get_session)
+):
+    """Update an application status or notes."""
+    statement = select(Application).where(Application.job_external_id == job_external_id)
+    db_app = session.exec(statement).first()
+    if not db_app:
+        raise HTTPException(status_code=404, detail="Application not found")
+    
+    if request.status is not None:
+        db_app.status = request.status
+    if request.notes is not None:
+        db_app.notes = request.notes
+        
+    session.add(db_app)
+    session.commit()
+    session.refresh(db_app)
+    return {"status": "success", "item": db_app}

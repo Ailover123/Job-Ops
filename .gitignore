@@ -41,3 +41,5 @@ docs/BUILD_LOG.md
 docs/NEXT_STEPS.md
 docs/KNOWN_ISSUES.md
 docs/DECISIONS.md
+ 
+*.db

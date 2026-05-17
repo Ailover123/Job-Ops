@@ -5,7 +5,7 @@ from app.matching import rank_jobs
 from app.models import CandidateProfile, Recommendation
 from app.seed_loader import load_seed_jobs
 from app.database import get_session
-from app.db_models import Profile
+from app.db_models import Profile, Preferences
 
 router = APIRouter(tags=["recommendations"])
 
@@ -24,28 +24,49 @@ async def recommendations_from_latest_profile(session: Session = Depends(get_ses
     results = session.exec(statement)
     db_profile = results.first()
 
-    if not db_profile:
+    statement_pref = select(Preferences).order_by(Preferences.updated_at.desc()).limit(1)
+    results_pref = session.exec(statement_pref)
+    db_pref = results_pref.first()
+
+    if not db_profile and not db_pref:
         return {"status": "no_profile", "items": []}
 
-    # Map DB Profile to CandidateProfile
-    # Profile.skills is List[dict] like [{"name": "Python", "level": "Expert"}]
-    # CandidateProfile.skills is List[str]
-    extracted_skills = [s.get("name") for s in db_profile.skills if s.get("name")]
-    
-    # Profile.location is dict like {"city": "Bangalore", ...}
-    # CandidateProfile.preferred_locations is List[str]
+    # Extract info from profile if exists
+    extracted_skills = []
     preferred_locations = []
-    if db_profile.location and db_profile.location.get("city"):
-        preferred_locations.append(db_profile.location.get("city"))
+    preferred_roles = []
+    
+    if db_profile:
+        extracted_skills = [s.get("name") for s in db_profile.skills if s.get("name")]
+        if db_profile.location and db_profile.location.get("city"):
+            preferred_locations.append(db_profile.location.get("city"))
+        preferred_roles = db_profile.suggested_roles or []
+
+    # Apply preference overrides if available
+    remote_pref = "remote_or_hybrid"
+    job_types = ["internship", "full_time"]
+    willing_to_relocate = False
+
+    if db_pref:
+        if db_pref.preferred_roles:
+            preferred_roles = db_pref.preferred_roles
+        if db_pref.preferred_locations:
+            preferred_locations = db_pref.preferred_locations
+        if db_pref.preferred_tech_stack:
+            # Merge tech stack skills with profile skills
+            extracted_skills = list(set(extracted_skills + db_pref.preferred_tech_stack))
+        remote_pref = db_pref.remote_preference
+        job_types = db_pref.job_types or job_types
+        willing_to_relocate = db_pref.willing_to_relocate
 
     candidate = CandidateProfile(
-        preferred_roles=db_profile.suggested_roles,
+        preferred_roles=preferred_roles,
         skills=extracted_skills,
         preferred_locations=preferred_locations,
-        # Keep defaults for now
-        remote_preference="remote_or_hybrid",
-        job_types=["internship", "full_time"],
-        experience_level="fresher"
+        remote_preference=remote_pref,
+        job_types=job_types,
+        experience_level="fresher",
+        willing_to_relocate=willing_to_relocate
     )
 
     recs = rank_jobs(candidate, load_seed_jobs())

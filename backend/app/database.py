@@ -15,7 +15,10 @@ if not DATABASE_URL:
     # Fallback to local postgres if not set (for dev convenience if they have one)
     DATABASE_URL = "postgresql://postgres:postgres@localhost:5432/job_ops"
 
-engine = create_engine(DATABASE_URL)
+if DATABASE_URL.startswith("sqlite"):
+    engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+else:
+    engine = create_engine(DATABASE_URL)
 
 def init_db():
     # Import models to ensure they are registered

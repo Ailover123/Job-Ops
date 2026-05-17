@@ -172,6 +172,27 @@ export default async function Home() {
             <div className="profile-tip" style={{ borderColor: '#ccfbf1', background: '#f0fdfa', marginTop: '16px' }}>
               ✓ Matched to your profile. <Link href="/onboarding/resume">Update resume</Link>
             </div>
+            <div style={{ marginTop: '12px' }}>
+              <Link 
+                href="/preferences" 
+                className="filter-button" 
+                style={{ 
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '100%', 
+                  background: '#ffffff', 
+                  color: '#0f766e', 
+                  borderColor: '#0f766e', 
+                  fontWeight: 600,
+                  fontSize: '0.85rem',
+                  gap: '6px'
+                }}
+              >
+                <SlidersHorizontal size={14} />
+                Refine Matches
+              </Link>
+            </div>
           </aside>
         ) : status === "offline" ? (
           <aside className="profile-panel">
@@ -192,6 +213,27 @@ export default async function Home() {
             </div>
             <div className="profile-tip" style={{ borderColor: '#fee2e2', background: '#fef2f2', marginTop: '16px', color: '#991b1b' }}>
               Preview mode (backend offline). <Link href="/onboarding/resume">Try Onboarding</Link>
+            </div>
+            <div style={{ marginTop: '12px' }}>
+              <Link 
+                href="/preferences" 
+                className="filter-button" 
+                style={{ 
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '100%', 
+                  background: '#ffffff', 
+                  color: '#0f766e', 
+                  borderColor: '#0f766e', 
+                  fontWeight: 600,
+                  fontSize: '0.85rem',
+                  gap: '6px'
+                }}
+              >
+                <SlidersHorizontal size={14} />
+                Refine Matches
+              </Link>
             </div>
           </aside>
         ) : (

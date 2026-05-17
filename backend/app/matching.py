@@ -48,7 +48,9 @@ def passes_hard_filters(profile: CandidateProfile, job: SeedJob) -> bool:
         return False
 
     if profile.preferred_locations and not _location_matches(profile, job):
-        return False
+        if not getattr(profile, "willing_to_relocate", False):
+            return False
+
 
     return True
 

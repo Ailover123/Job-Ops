@@ -45,3 +45,16 @@ class Application(SQLModel, table=True):
     status: str = "applied"  # e.g., applied, interviewing, offered, rejected
     applied_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     notes: str = ""
+
+
+class Preferences(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    preferred_roles: List[str] = Field(default_factory=list, sa_column=Column(JSON))
+    preferred_locations: List[str] = Field(default_factory=list, sa_column=Column(JSON))
+    remote_preference: str = "remote_or_hybrid"
+    job_types: List[str] = Field(default_factory=list, sa_column=Column(JSON))
+    preferred_tech_stack: List[str] = Field(default_factory=list, sa_column=Column(JSON))
+    willing_to_relocate: bool = False
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
