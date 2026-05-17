@@ -177,62 +177,62 @@ def save_imported_jobs(new_jobs: List[SeedJob]) -> dict:
     Returns a summary dict:
         {
             "fetched":  total number of jobs passed in,
-            "added":    newly inserted jobs,
+            "added":    newly inserted jobs (new rows),
             "updated":  jobs that already existed and were refreshed,
         }
+
+    Raises on database failure so callers can handle the error correctly.
     """
     added_count = 0
     updated_count = 0
-    try:
-        with Session(engine) as session:
-            for job in new_jobs:
-                # Check if job already exists
-                existing = session.exec(select(Job).where(Job.external_id == job.external_id)).first()
-                if not existing:
-                    added_count += 1
-                    db_job = Job(
-                        external_id=job.external_id,
-                        title=job.title,
-                        company_name=job.company_name,
-                        description=job.description,
-                        location=job.location,
-                        city=job.city,
-                        state=job.state,
-                        country=job.country,
-                        is_remote=job.is_remote,
-                        job_type=job.job_type,
-                        experience_min=job.experience_min,
-                        experience_max=job.experience_max,
-                        skills=job.skills,
-                        apply_url=job.apply_url,
-                        source_name=job.source_name,
-                        posted_at=job.posted_at,
-                        is_active=job.is_active
-                    )
-                    session.add(db_job)
-                else:
-                    updated_count += 1
-                    # Update existing job fields to keep it fresh
-                    existing.title = job.title
-                    existing.company_name = job.company_name
-                    existing.description = job.description
-                    existing.location = job.location
-                    existing.city = job.city
-                    existing.state = job.state
-                    existing.country = job.country
-                    existing.is_remote = job.is_remote
-                    existing.job_type = job.job_type
-                    existing.experience_min = job.experience_min
-                    existing.experience_max = job.experience_max
-                    existing.skills = job.skills
-                    existing.apply_url = job.apply_url
-                    existing.source_name = job.source_name
-                    existing.posted_at = job.posted_at
-                    existing.is_active = job.is_active
-                    session.add(existing)
-            session.commit()
-    except Exception as e:
-        print(f"Error saving imported jobs to database: {e}")
+    with Session(engine) as session:
+        for job in new_jobs:
+            # Check if job already exists
+            existing = session.exec(select(Job).where(Job.external_id == job.external_id)).first()
+            if not existing:
+                added_count += 1
+                db_job = Job(
+                    external_id=job.external_id,
+                    title=job.title,
+                    company_name=job.company_name,
+                    description=job.description,
+                    location=job.location,
+                    city=job.city,
+                    state=job.state,
+                    country=job.country,
+                    is_remote=job.is_remote,
+                    job_type=job.job_type,
+                    experience_min=job.experience_min,
+                    experience_max=job.experience_max,
+                    skills=job.skills,
+                    apply_url=job.apply_url,
+                    source_name=job.source_name,
+                    posted_at=job.posted_at,
+                    is_active=job.is_active
+                )
+                session.add(db_job)
+            else:
+                updated_count += 1
+                # Refresh existing job fields to keep it current
+                existing.title = job.title
+                existing.company_name = job.company_name
+                existing.description = job.description
+                existing.location = job.location
+                existing.city = job.city
+                existing.state = job.state
+                existing.country = job.country
+                existing.is_remote = job.is_remote
+                existing.job_type = job.job_type
+                existing.experience_min = job.experience_min
+                existing.experience_max = job.experience_max
+                existing.skills = job.skills
+                existing.apply_url = job.apply_url
+                existing.source_name = job.source_name
+                existing.posted_at = job.posted_at
+                existing.is_active = job.is_active
+                session.add(existing)
+        session.commit()
     return {"fetched": len(new_jobs), "added": added_count, "updated": updated_count}
+
 
 

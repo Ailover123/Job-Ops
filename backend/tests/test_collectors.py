@@ -82,7 +82,7 @@ def authed_client_fixture(session: Session):
     app.dependency_overrides.clear()
 
 
-# ─── Existing normalization tests ─────────────────────────────────────────────
+# --- Existing normalization tests ---
 
 def test_greenhouse_collector_normalization():
     collector = GreenhouseCollector()
@@ -252,7 +252,7 @@ def test_jobs_endpoint_includes_imported_jobs(client: TestClient):
     assert imported_job_results[0]["company_name"] == "Stripe"
 
 
-# ─── New /collect/all tests ───────────────────────────────────────────────────
+# --- New /collect/all tests ---
 
 def test_collect_all_requires_auth(authed_client: TestClient):
     """POST /collect/all must reject requests without X-Internal-API-Key."""
@@ -404,3 +404,68 @@ def test_collect_all_handles_failed_source(MockGreenhouse, MockLever, client: Te
     working = session.get(CollectorSource, working_id)
     assert working.last_success_at is not None
     assert working.last_error is None
+
+
+@patch("app.routers.internal.LeverCollector")
+@patch("app.routers.internal.GreenhouseCollector")
+def test_collect_all_save_failure_marks_source_failed(MockGreenhouse, MockLever, client: TestClient, session: Session, monkeypatch):
+    """If save_imported_jobs raises, the source is marked failed with last_error set."""
+    gh_source = CollectorSource(
+        company_name="SaveFailCo", board_token="savefailco", source_type="greenhouse", enabled=True
+    )
+    lv_source = CollectorSource(
+        company_name="SaveOkCo", company_id="saveokco", source_type="lever", enabled=True
+    )
+    session.add(gh_source)
+    session.add(lv_source)
+    session.commit()
+    session.refresh(gh_source)
+    session.refresh(lv_source)
+    fail_id = gh_source.id
+    ok_id = lv_source.id
+
+    mock_gh_job = SeedJob(
+        external_id="greenhouse-savefailco-1", title="Save Fail Job",
+        company_name="SaveFailCo", description="desc", location="Remote",
+        is_remote=True, job_type="full_time", skills=["Rust"],
+        apply_url="https://greenhouse.io/1", source_name="greenhouse", is_active=True
+    )
+    mock_lv_job = SeedJob(
+        external_id="lever-saveokco-2", title="Save Ok Job",
+        company_name="SaveOkCo", description="desc", location="NYC",
+        is_remote=False, job_type="full_time", skills=["Go"],
+        apply_url="https://lever.co/2", source_name="lever", is_active=True
+    )
+    MockGreenhouse.return_value.collect_and_normalize.return_value = [mock_gh_job]
+    MockLever.return_value.collect_and_normalize.return_value = [mock_lv_job]
+
+    # Make save_imported_jobs raise on the first call (greenhouse) but succeed on the second (lever)
+    original_save = seed_loader.save_imported_jobs
+    call_count = {"n": 0}
+
+    def patched_save(jobs):
+        call_count["n"] += 1
+        if call_count["n"] == 1:
+            raise RuntimeError("DB connection lost")
+        return original_save(jobs)
+
+    monkeypatch.setattr("app.routers.internal.save_imported_jobs", patched_save)
+
+    response = client.post("/api/v1/internal/collect/all")
+    assert response.status_code == 200
+
+    data = response.json()
+    assert data["sources_failed"] >= 1
+    assert data["sources_succeeded"] >= 1
+
+    # Verify the greenhouse source was marked failed with last_error
+    session.expire_all()
+    fail_src = session.get(CollectorSource, fail_id)
+    assert fail_src.last_error is not None
+    assert "DB connection lost" in fail_src.last_error
+    assert fail_src.last_success_at is None
+
+    # Verify the lever source was still successful
+    ok_src = session.get(CollectorSource, ok_id)
+    assert ok_src.last_success_at is not None
+    assert ok_src.last_error is None

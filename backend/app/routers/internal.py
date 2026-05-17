@@ -44,7 +44,7 @@ async def collect_greenhouse(request: GreenhouseCollectRequest):
     """
     Trigger collection of job listings from Greenhouse for a specific board token.
     Uses public endpoints without auth/scraping logins.
-    Note: does NOT update CollectorSource audit fields — ad-hoc endpoint.
+    Ad-hoc endpoint - does not update CollectorSource audit fields.
     """
     board_token = request.board_token.strip()
     if not board_token:
@@ -73,7 +73,7 @@ async def collect_lever(request: LeverCollectRequest):
     """
     Trigger collection of job listings from Lever for a specific company id.
     Uses public endpoints without auth/scraping logins.
-    Note: does NOT update CollectorSource audit fields — ad-hoc endpoint.
+    Ad-hoc endpoint - does not update CollectorSource audit fields.
     """
     company_id = request.company_id.strip()
     if not company_id:
@@ -175,7 +175,7 @@ async def collect_all_sources():
                 db_source.last_success_at = datetime.now(timezone.utc)
                 db_source.last_error = None
                 db_source.last_fetched_count = fetched
-                db_source.last_saved_count = added
+                db_source.last_saved_count = added + updated  # both new and refreshed jobs were persisted
                 session.add(db_source)
                 session.commit()
 
