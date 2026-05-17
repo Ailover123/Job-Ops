@@ -1,7 +1,7 @@
 import os
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException
-from sqlmodel import Session, select
+from sqlmodel import Session, select, desc
 from pydantic import BaseModel
 from google import genai
 
@@ -78,7 +78,7 @@ def get_skill_gap_roadmap(request: SkillGapRequest, session: Session = Depends(g
         raise HTTPException(status_code=400, detail="Desired role is required")
 
     # 1. Fetch latest profile skills
-    statement = select(Profile).order_by(Profile.created_at.desc()).limit(1)
+    statement = select(Profile).order_by(desc(Profile.created_at)).limit(1)
     results = session.exec(statement)
     db_profile = results.first()
 
@@ -209,7 +209,7 @@ def get_skill_gap_roadmap(request: SkillGapRequest, session: Session = Depends(g
                 model=os.getenv("GEMINI_MODEL", "gemini-2.5-flash"),
                 contents=prompt,
             )
-            explanation = response.text.strip()
+            explanation = response.text.strip() if response.text else ""
         except Exception as e:
             # Fallback gracefully
             print(f"Gemini roadmap explanation failed: {e}")
