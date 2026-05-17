@@ -38,6 +38,7 @@ class Recommendation(BaseModel):
     fresher_score: float
     location_score: float
     experience_score: float
+    quality_score: float
     final_score: int
     score_label: str
     explanation: str

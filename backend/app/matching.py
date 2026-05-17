@@ -1,4 +1,5 @@
 from app.models import CandidateProfile, Recommendation, SeedJob
+from app.job_quality import passes_quality_gate, classify_job_quality
 
 
 FRESHER_POSITIVE_TERMS = {
@@ -15,19 +16,6 @@ FRESHER_POSITIVE_TERMS = {
     "0-2",
 }
 
-SENIOR_NEGATIVE_TERMS = {
-    "senior",
-    "staff",
-    "principal",
-    "lead",
-    "manager",
-    "architect",
-    "5+",
-    "7+",
-    "8+",
-}
-
-
 def rank_jobs(profile: CandidateProfile, jobs: list[SeedJob]) -> list[Recommendation]:
     recommendations = [
         score_job(profile, job)
@@ -41,7 +29,7 @@ def passes_hard_filters(profile: CandidateProfile, job: SeedJob) -> bool:
     if profile.job_types and job.job_type not in profile.job_types:
         return False
 
-    if _is_senior_only(job) and profile.experience_level == "fresher":
+    if not passes_quality_gate(job, profile):
         return False
 
     if profile.remote_preference == "remote_only" and not job.is_remote:
@@ -60,12 +48,16 @@ def score_job(profile: CandidateProfile, job: SeedJob) -> Recommendation:
     fresher_score = _fresher_score(job)
     location_score = _location_score(profile, job)
     experience_score = _experience_score(job)
+    
+    quality = classify_job_quality(job)
+    quality_score = quality.quality_score / 100.0
 
     final = round(
         skill_score * 30
-        + fresher_score * 25
-        + location_score * 20
-        + experience_score * 25
+        + fresher_score * 20
+        + location_score * 15
+        + experience_score * 20
+        + quality_score * 15
     )
 
     return Recommendation(
@@ -74,6 +66,7 @@ def score_job(profile: CandidateProfile, job: SeedJob) -> Recommendation:
         fresher_score=round(fresher_score, 2),
         location_score=round(location_score, 2),
         experience_score=round(experience_score, 2),
+        quality_score=round(quality_score, 2),
         final_score=final,
         score_label=_score_label(final),
         explanation=_explain(profile, job, final),
@@ -139,10 +132,6 @@ def _location_matches(profile: CandidateProfile, job: SeedJob) -> bool:
 
     return any(location in job_location for location in preferred)
 
-
-def _is_senior_only(job: SeedJob) -> bool:
-    text = _job_text(job)
-    return any(term in text for term in SENIOR_NEGATIVE_TERMS)
 
 
 def _job_text(job: SeedJob) -> str:

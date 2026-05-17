@@ -32,6 +32,7 @@ Remove job if:
 - Location is incompatible with user preference.
 - Job type is incompatible with user preference.
 - Job title contains blocked seniority terms and no fresher indicators.
+- Job fails the **Quality Gate** (e.g., heavily senior-focused titles or requires >= 4 years experience for a fresher).
 
 Example seniority blockers:
 
@@ -153,10 +154,10 @@ MVP formula:
 ```text
 final_score =
   skill_score * 0.30 +
-  semantic_score * 0.25 +
   fresher_score * 0.20 +
   location_score * 0.15 +
-  freshness_score * 0.10
+  experience_score * 0.20 +
+  quality_score * 0.15
 ```
 
 This weighting keeps fresher suitability important. A strong skill match should not overpower a clearly senior job.

@@ -197,10 +197,14 @@ An alias endpoint retrieving the list of job match recommendations for the user 
         "skills": ["React", "TypeScript", "Node.js"],
         "description": "Join our product team..."
       },
-      "has_profile": true,
-      "match_score": 85,
-      "match_label": "Strong Match",
-      "match_explanation": "Matches your strong frontend background and React/TypeScript skills."
+      "skill_score": 0.9,
+      "fresher_score": 1.0,
+      "location_score": 1.0,
+      "experience_score": 0.8,
+      "quality_score": 1.0,
+      "final_score": 85,
+      "score_label": "Strong Match",
+      "explanation": "Matches your strong frontend background and React/TypeScript skills."
     }
   ]
 }
@@ -227,10 +231,14 @@ Runs the compatibility score algorithm dynamically on a raw profile and match pr
 [
   {
     "job": { ... },
-    "has_profile": true,
-    "match_score": 90,
-    "match_label": "Excellent Match",
-    "match_explanation": "..."
+    "skill_score": 0.95,
+    "fresher_score": 1.0,
+    "location_score": 1.0,
+    "experience_score": 0.8,
+    "quality_score": 1.0,
+    "final_score": 90,
+    "score_label": "Excellent Match",
+    "explanation": "..."
   }
 ]
 ```
