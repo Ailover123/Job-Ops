@@ -63,7 +63,7 @@ def client_fixture(session: Session):
     # Patch the engine used by /collect/all to be the test engine
     import app.routers.internal as internal_mod
     original_engine = internal_mod.engine
-    internal_mod.engine = session.get_bind()
+    internal_mod.engine = session.get_bind()  # type: ignore
 
     client = TestClient(app)
     yield client
@@ -351,6 +351,7 @@ def test_collect_all_updates_source_status(MockGreenhouse, MockLever, client: Te
     # Verify DB status fields were updated
     session.expire_all()
     updated = session.get(CollectorSource, source_id)
+    assert updated is not None
     assert updated.last_run_at is not None
     assert updated.last_success_at is not None
     assert updated.last_error is None
@@ -396,12 +397,13 @@ def test_collect_all_handles_failed_source(MockGreenhouse, MockLever, client: Te
     # Broken source has last_error set
     session.expire_all()
     broken = session.get(CollectorSource, broken_id)
-    assert broken.last_error is not None
-    assert "Network timeout" in broken.last_error
+    assert broken is not None
+    assert broken.last_error is not None and "Network timeout" in broken.last_error
     assert broken.last_success_at is None  # was never successful
 
     # Working source has no error
     working = session.get(CollectorSource, working_id)
+    assert working is not None
     assert working.last_success_at is not None
     assert working.last_error is None
 
@@ -461,11 +463,12 @@ def test_collect_all_save_failure_marks_source_failed(MockGreenhouse, MockLever,
     # Verify the greenhouse source was marked failed with last_error
     session.expire_all()
     fail_src = session.get(CollectorSource, fail_id)
-    assert fail_src.last_error is not None
-    assert "DB connection lost" in fail_src.last_error
+    assert fail_src is not None
+    assert fail_src.last_error is not None and "DB connection lost" in fail_src.last_error
     assert fail_src.last_success_at is None
 
     # Verify the lever source was still successful
     ok_src = session.get(CollectorSource, ok_id)
+    assert ok_src is not None
     assert ok_src.last_success_at is not None
     assert ok_src.last_error is None

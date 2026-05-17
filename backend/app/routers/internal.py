@@ -144,9 +144,10 @@ async def collect_all_sources():
             # Mark attempt time
             with Session(engine) as session:
                 db_source = session.get(CollectorSource, source.id)
-                db_source.last_run_at = now
-                session.add(db_source)
-                session.commit()
+                if db_source:
+                    db_source.last_run_at = now
+                    session.add(db_source)
+                    session.commit()
 
             # Dispatch to the correct collector
             if source.source_type == "greenhouse":
@@ -172,12 +173,13 @@ async def collect_all_sources():
             # Update status on success
             with Session(engine) as session:
                 db_source = session.get(CollectorSource, source.id)
-                db_source.last_success_at = datetime.now(timezone.utc)
-                db_source.last_error = None
-                db_source.last_fetched_count = fetched
-                db_source.last_saved_count = added + updated  # both new and refreshed jobs were persisted
-                session.add(db_source)
-                session.commit()
+                if db_source:
+                    db_source.last_success_at = datetime.now(timezone.utc)
+                    db_source.last_error = None
+                    db_source.last_fetched_count = fetched
+                    db_source.last_saved_count = added + updated  # both new and refreshed jobs were persisted
+                    session.add(db_source)
+                    session.commit()
 
             total_fetched += fetched
             total_added += added
@@ -206,9 +208,10 @@ async def collect_all_sources():
             try:
                 with Session(engine) as session:
                     db_source = session.get(CollectorSource, source.id)
-                    db_source.last_error = error_msg
-                    session.add(db_source)
-                    session.commit()
+                    if db_source:
+                        db_source.last_error = error_msg
+                        session.add(db_source)
+                        session.commit()
             except Exception as db_err:
                 logger.error(f"Failed to write last_error for source {source.id}: {db_err}")
 
