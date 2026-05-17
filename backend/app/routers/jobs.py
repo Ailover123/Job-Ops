@@ -6,7 +6,7 @@ from pydantic import BaseModel
 
 from app.database import get_session
 from app.db_models import SavedJob, Application, Profile, Preferences
-from app.seed_loader import load_seed_jobs
+from app.seed_loader import load_seed_jobs, load_all_jobs
 from app.matching import score_job
 from app.models import CandidateProfile
 
@@ -138,7 +138,7 @@ async def update_application(
 async def get_job_detail(external_id: str, session: Session = Depends(get_session)):
     """Fetch job details and compute candidate compatibility scores."""
     # Find the job in seed jobs
-    jobs = load_seed_jobs()
+    jobs = load_all_jobs()
     job = next((j for j in jobs if j.external_id == external_id), None)
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")

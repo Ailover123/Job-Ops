@@ -128,3 +128,38 @@ Reject or downrank jobs if:
 - Avoid auto-apply flows.
 - Cache results to reduce repeated requests.
 
+
+## 11. Implementation Architecture (Greenhouse & Lever Collectors)
+
+We have successfully implemented the first production-grade job collectors utilizing public, authenticated-free ATS APIs, completely eliminating the need for aggressive login scraping or browser simulation.
+
+### 11.1 Architecture & Pipeline
+
+```mermaid
+graph TD
+    A[Trigger Collection API] -->|POST /api/v1/internal/collect/greenhouse| B(Greenhouse Board API)
+    A -->|POST /api/v1/internal/collect/lever| C(Lever Postings API)
+    B -->|Fetch JSON| D[Clean & Normalize Pipeline]
+    C -->|Fetch JSON| D
+    D -->|Clean HTML & Extrapolate Fields| E[Match Fresher Skills & Experience]
+    E -->|SeedJob Objects| F[Deduplicate by Unique ID]
+    F -->|Merge & Save| G[(imported_jobs.json Cache)]
+```
+
+### 11.2 Normalization Pipeline & Parsing Mechanics
+- **HTML Cleaning (`clean_html`)**: Automatically strips script/style tags, removes block structural syntax (e.g. `<div/>`, `<p/>`), unescapes HTML entities, and formats descriptions into normalized, readable plain text.
+- **Skill Extraction (`extract_skills`)**: Performs full-text case-insensitive regex boundary matching against 50+ key fresher-friendly technologies (e.g., `Python`, `TypeScript`, `C++`, `Go`) to avoid false positives (e.g. matching `Go` within `good`).
+- **Experience Bound Parsing (`parse_experience`)**: Extrapolates experience limits dynamically using a hierarchy of regex rules (e.g., `'1 to 3 years'`, `'2+ years'`, `'minimum of 2 years'`).
+
+### 11.3 Data Storage & Retrieval
+- **Persistence Layer**: Collected jobs are persisted in `data/imported_jobs.json` to keep database schemes lightweight.
+- **Deduplication Invariant**: Jobs are merged on write using unique external IDs:
+  - **Greenhouse**: `greenhouse-{board_token}-{id}`
+  - **Lever**: `lever-{company_id}-{id}`
+- **Unified Retrieval**: The system dynamically loads both seed jobs and imported jobs in-memory with automatic cross-source deduplication via `load_all_jobs()`. This unified dataset powers:
+  - `GET /api/v1/jobs` (Job Listings)
+  - `GET /api/v1/jobs/{external_id}` (Job Details with personalized match explainers)
+  - `POST /api/v1/roadmap/skill-gap` (Roadmap recommendations)
+  - Personalized recommendation streams
+
+

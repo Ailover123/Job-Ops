@@ -7,7 +7,7 @@ from google import genai
 
 from app.database import get_session
 from app.db_models import Profile
-from app.seed_loader import load_seed_jobs
+from app.seed_loader import load_seed_jobs, load_all_jobs
 
 router = APIRouter(tags=["roadmap"])
 
@@ -92,7 +92,7 @@ def get_skill_gap_roadmap(request: SkillGapRequest, session: Session = Depends(g
     user_skills_lower = {s.lower() for s in user_skills}
 
     # 2. Match seed jobs
-    seed_jobs = load_seed_jobs()
+    seed_jobs = load_all_jobs()
     matched_jobs = []
     
     desired_lower = desired_role.lower()

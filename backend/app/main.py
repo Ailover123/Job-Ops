@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
-from app.routers import health, recommendations, onboarding, jobs, preferences, roadmap
+from app.routers import health, recommendations, onboarding, jobs, preferences, roadmap, internal
 from app.database import init_db
 
 from contextlib import asynccontextmanager
@@ -53,5 +53,7 @@ app.include_router(onboarding.router, prefix="/api/v1")
 app.include_router(jobs.router, prefix="/api/v1")
 app.include_router(preferences.router, prefix="/api/v1")
 app.include_router(roadmap.router, prefix="/api/v1")
+app.include_router(internal.router, prefix="/api/v1")
+
 
 
