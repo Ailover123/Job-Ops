@@ -112,20 +112,50 @@ def test_reject_missing_identifiers(client: TestClient):
     assert response2.status_code == 422
 
 def test_reject_duplicate_active_source(client: TestClient, test_session: Session):
-    src = CollectorSource(company_name="Duplicate", source_type="lever", company_id="dup")
+    src = CollectorSource(company_name="Company1", source_type="lever", company_id="dup")
     test_session.add(src)
     test_session.commit()
 
+    # Should reject same company_id
     response = client.post(
         "/api/v1/internal/sources",
         headers={"X-Internal-API-Key": "test-internal-key"},
         json={
-            "company_name": "Duplicate",
+            "company_name": "Company2",
             "source_type": "lever",
-            "company_id": "dup2"
+            "company_id": "dup"
         }
     )
     assert response.status_code == 400
+
+    # Should allow same company_name but different company_id
+    response2 = client.post(
+        "/api/v1/internal/sources",
+        headers={"X-Internal-API-Key": "test-internal-key"},
+        json={
+            "company_name": "Company1",
+            "source_type": "lever",
+            "company_id": "different"
+        }
+    )
+    assert response2.status_code == 200
+
+def test_patch_rejects_invalid_config(client: TestClient, test_session: Session):
+    src = CollectorSource(company_name="Patch Invalid", source_type="lever", company_id="patch1")
+    test_session.add(src)
+    test_session.commit()
+    test_session.refresh(src)
+
+    # Change to greenhouse without board_token
+    response = client.patch(
+        f"/api/v1/internal/sources/{src.id}",
+        headers={"X-Internal-API-Key": "test-internal-key"},
+        json={
+            "source_type": "greenhouse",
+            "company_id": None
+        }
+    )
+    assert response.status_code == 422
 
 def test_patch_disables_source(client: TestClient, test_session: Session):
     src = CollectorSource(company_name="To Disable", source_type="lever", company_id="td")

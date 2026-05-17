@@ -47,15 +47,19 @@ def list_sources():
 def create_source(source_in: CollectorSourceCreate):
     """Add a new collector source config."""
     with Session(engine) as session:
-        # Check for duplicates
-        existing = session.exec(
-            select(CollectorSource).where(
-                CollectorSource.company_name == source_in.company_name,
-                CollectorSource.enabled == True
-            )
-        ).first()
+        # Check for duplicates based on identifier instead of company name
+        stmt = select(CollectorSource).where(
+            CollectorSource.source_type == source_in.source_type,
+            CollectorSource.enabled == True
+        )
+        if source_in.source_type == "greenhouse":
+            stmt = stmt.where(CollectorSource.board_token == source_in.board_token)
+        elif source_in.source_type == "lever":
+            stmt = stmt.where(CollectorSource.company_id == source_in.company_id)
+            
+        existing = session.exec(stmt).first()
         if existing:
-            raise HTTPException(status_code=400, detail="Active source with this company name already exists")
+            raise HTTPException(status_code=400, detail="Active source with this identifier already exists")
         
         db_source = CollectorSource.model_validate(source_in.model_dump())
         session.add(db_source)
@@ -74,6 +78,28 @@ def update_source(source_id: int, source_in: CollectorSourceUpdate):
         update_data = source_in.model_dump(exclude_unset=True)
         for key, value in update_data.items():
             setattr(db_source, key, value)
+            
+        # Validate merged source
+        if db_source.source_type == "greenhouse" and not db_source.board_token:
+            raise HTTPException(status_code=422, detail="Greenhouse source requires a board_token")
+        if db_source.source_type == "lever" and not db_source.company_id:
+            raise HTTPException(status_code=422, detail="Lever source requires a company_id")
+            
+        # Check duplicate if enabled
+        if db_source.enabled:
+            stmt = select(CollectorSource).where(
+                CollectorSource.source_type == db_source.source_type,
+                CollectorSource.id != db_source.id,
+                CollectorSource.enabled == True
+            )
+            if db_source.source_type == "greenhouse":
+                stmt = stmt.where(CollectorSource.board_token == db_source.board_token)
+            elif db_source.source_type == "lever":
+                stmt = stmt.where(CollectorSource.company_id == db_source.company_id)
+                
+            existing = session.exec(stmt).first()
+            if existing:
+                raise HTTPException(status_code=400, detail="Active source with this identifier already exists")
         
         db_source.updated_at = datetime.now(timezone.utc)
         session.add(db_source)

@@ -153,26 +153,27 @@ export default function InternalSourcesPage() {
 
   if (!hasKey) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
-        <div className="bg-white p-8 rounded-xl shadow-lg max-w-md w-full border border-gray-100">
-          <h1 className="text-2xl font-bold text-gray-900 mb-6">Internal Access</h1>
-          <p className="text-gray-600 mb-4 text-sm">Please enter the internal API key to access source management.</p>
-          <div className="space-y-4">
+      <div className="centered-page">
+        <div className="card" style={{ maxWidth: '400px', width: '100%' }}>
+          <h1 style={{ marginBottom: '16px' }}>Internal Access</h1>
+          <p style={{ color: '#64748b', fontSize: '13px', marginBottom: '24px' }}>Please enter the internal API key to access source management.</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <input
               type="password"
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
               placeholder="X-Internal-API-Key"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+              className="input-field"
               onKeyDown={(e) => e.key === "Enter" && handleSaveKey()}
             />
             <button
               onClick={handleSaveKey}
-              className="w-full bg-blue-600 text-white font-semibold py-2 rounded-lg hover:bg-blue-700 transition-colors"
+              className="button-primary"
+              style={{ width: '100%' }}
             >
               Authenticate
             </button>
-            {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+            {error && <p className="error-text">{error}</p>}
           </div>
         </div>
       </div>
@@ -180,30 +181,35 @@ export default function InternalSourcesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-6xl mx-auto space-y-8">
+    <div className="page-shell" style={{ padding: '32px' }}>
+      <div style={{ maxWidth: '1120px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '24px' }}>
         
-        <div className="flex justify-between items-center bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+        <div className="card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Job Sources</h1>
-            <p className="text-gray-500 mt-1">Manage collector configurations</p>
+            <h1 style={{ marginBottom: '4px' }}>Job Sources</h1>
+            <p style={{ color: '#64748b', fontSize: '13px', margin: 0 }}>Manage collector configurations</p>
           </div>
-          <div className="flex items-center gap-4">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
             <button
               onClick={() => {
                 sessionStorage.removeItem("internal_api_key");
                 setHasKey(false);
               }}
-              className="text-gray-500 hover:text-gray-700 text-sm font-medium"
+              style={{ background: 'none', border: 'none', color: '#64748b', fontSize: '13px', fontWeight: 500, cursor: 'pointer' }}
             >
               Logout
             </button>
             <button
+              onClick={() => fetchSources(apiKey)}
+              disabled={isCollecting}
+              className="button-secondary"
+            >
+              Refresh
+            </button>
+            <button
               onClick={handleCollectAll}
               disabled={isCollecting}
-              className={`px-6 py-2 rounded-lg font-semibold text-white transition-colors ${
-                isCollecting ? "bg-blue-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
-              }`}
+              className="button-primary"
             >
               {isCollecting ? "Collecting..." : "Run Collect All"}
             </button>
@@ -211,13 +217,13 @@ export default function InternalSourcesPage() {
         </div>
 
         {error && (
-          <div className="bg-red-50 text-red-700 p-4 rounded-lg border border-red-200">
+          <div className="error-text" style={{ padding: '12px 16px', background: '#fef2f2', border: '1px solid #fee2e2', borderRadius: '6px' }}>
             {error}
           </div>
         )}
 
         {collectResult && (
-          <div className="bg-green-50 text-green-800 p-4 rounded-lg border border-green-200 text-sm">
+          <div className="success-banner">
             <strong>Collection Complete: </strong>
             Attempted: {collectResult.sources_attempted}, 
             Succeeded: {collectResult.sources_succeeded}, 
@@ -226,125 +232,139 @@ export default function InternalSourcesPage() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '24px', alignItems: 'start' }}>
           
-          <div className="lg:col-span-1">
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 sticky top-8">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Add New Source</h2>
-              <form onSubmit={handleAddSource} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Company Name</label>
-                  <input
-                    type="text"
-                    required
-                    value={companyName}
-                    onChange={(e) => setCompanyName(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
-                    placeholder="e.g. OpenAI"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Source Type</label>
-                  <select
-                    value={sourceType}
-                    onChange={(e) => setSourceType(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 outline-none text-sm bg-white"
-                  >
-                    <option value="lever">Lever</option>
-                    <option value="greenhouse">Greenhouse</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {sourceType === "greenhouse" ? "Board Token" : "Company ID"}
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={identifier}
-                    onChange={(e) => setIdentifier(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
-                    placeholder={`e.g. ${sourceType === "greenhouse" ? "openai" : "openai"}`}
-                  />
-                </div>
-                <button
-                  type="submit"
-                  className="w-full bg-gray-900 text-white font-medium py-2 rounded-md hover:bg-gray-800 transition-colors text-sm"
+          <div className="card">
+            <h2 style={{ marginBottom: '16px', fontSize: '16px' }}>Add New Source</h2>
+            <form onSubmit={handleAddSource} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div>
+                <label className="input-label">Company Name</label>
+                <input
+                  type="text"
+                  required
+                  value={companyName}
+                  onChange={(e) => setCompanyName(e.target.value)}
+                  className="input-field"
+                  placeholder="e.g. OpenAI"
+                />
+              </div>
+              <div>
+                <label className="input-label">Source Type</label>
+                <select
+                  value={sourceType}
+                  onChange={(e) => setSourceType(e.target.value)}
+                  className="input-field"
                 >
-                  Add Source
-                </button>
-              </form>
-            </div>
+                  <option value="lever">Lever</option>
+                  <option value="greenhouse">Greenhouse</option>
+                </select>
+              </div>
+              <div>
+                <label className="input-label">
+                  {sourceType === "greenhouse" ? "Board Token" : "Company ID"}
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={identifier}
+                  onChange={(e) => setIdentifier(e.target.value)}
+                  className="input-field"
+                  placeholder={`e.g. ${sourceType === "greenhouse" ? "openai" : "openai"}`}
+                />
+              </div>
+              <button
+                type="submit"
+                className="button-primary"
+                style={{ marginTop: '8px' }}
+              >
+                Add Source
+              </button>
+            </form>
           </div>
 
-          <div className="lg:col-span-2">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="bg-gray-50 border-b border-gray-100 text-xs uppercase text-gray-500 font-semibold tracking-wider">
-                      <th className="p-4">Company</th>
-                      <th className="p-4">Type</th>
-                      <th className="p-4">Identifier</th>
-                      <th className="p-4">Status</th>
-                      <th className="p-4">Last Run</th>
-                      <th className="p-4 text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100 text-sm">
-                    {sources.map(source => (
-                      <tr key={source.id} className="hover:bg-gray-50 transition-colors">
-                        <td className="p-4 font-medium text-gray-900">{source.company_name}</td>
-                        <td className="p-4">
-                          <span className={`px-2 py-1 rounded text-xs font-medium capitalize ${
-                            source.source_type === 'greenhouse' ? 'bg-emerald-100 text-emerald-800' : 'bg-purple-100 text-purple-800'
-                          }`}>
-                            {source.source_type}
-                          </span>
-                        </td>
-                        <td className="p-4 text-gray-600 font-mono text-xs">
-                          {source.board_token || source.company_id}
-                        </td>
-                        <td className="p-4">
-                          <button 
-                            onClick={() => handleToggleEnabled(source)}
-                            className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
-                              source.enabled ? 'bg-green-100 text-green-800 hover:bg-green-200' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                            }`}
-                          >
-                            {source.enabled ? 'Enabled' : 'Disabled'}
-                          </button>
-                        </td>
-                        <td className="p-4">
-                          {source.last_error ? (
-                            <span className="text-red-600 text-xs" title={source.last_error}>Failed</span>
-                          ) : source.last_success_at ? (
-                            <span className="text-gray-500 text-xs">{new Date(source.last_success_at).toLocaleDateString()}</span>
+          <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+                    <th style={{ padding: '12px 16px', fontSize: '11px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.03em' }}>Company</th>
+                    <th style={{ padding: '12px 16px', fontSize: '11px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.03em' }}>Type</th>
+                    <th style={{ padding: '12px 16px', fontSize: '11px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.03em' }}>Identifier</th>
+                    <th style={{ padding: '12px 16px', fontSize: '11px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.03em' }}>Status</th>
+                    <th style={{ padding: '12px 16px', fontSize: '11px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.03em' }}>Last Run</th>
+                    <th style={{ padding: '12px 16px', fontSize: '11px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.03em', textAlign: 'right' }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody style={{ fontSize: '13px' }}>
+                  {sources.map((source, i) => (
+                    <tr key={source.id} style={{ borderBottom: i === sources.length - 1 ? 'none' : '1px solid #f1f5f9' }}>
+                      <td style={{ padding: '14px 16px', fontWeight: 500 }}>{source.company_name}</td>
+                      <td style={{ padding: '14px 16px' }}>
+                        <span className={`match-label ${source.source_type === 'greenhouse' ? 'applied' : 'interviewing'}`} style={{ textTransform: 'capitalize' }}>
+                          {source.source_type}
+                        </span>
+                      </td>
+                      <td style={{ padding: '14px 16px', fontFamily: 'monospace', color: '#64748b' }}>
+                        {source.board_token || source.company_id}
+                      </td>
+                      <td style={{ padding: '14px 16px' }}>
+                        <button 
+                          onClick={() => handleToggleEnabled(source)}
+                          style={{
+                            padding: '4px 8px',
+                            borderRadius: '4px',
+                            fontSize: '11px',
+                            fontWeight: 600,
+                            border: 'none',
+                            cursor: 'pointer',
+                            background: source.enabled ? '#ecfdf5' : '#f1f5f9',
+                            color: source.enabled ? '#059669' : '#64748b'
+                          }}
+                        >
+                          {source.enabled ? 'Enabled' : 'Disabled'}
+                        </button>
+                      </td>
+                      <td style={{ padding: '14px 16px', color: '#64748b', fontSize: '12px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                          {source.last_run_at ? (
+                            <span>Run: {new Date(source.last_run_at).toLocaleString()}</span>
                           ) : (
-                            <span className="text-gray-400 text-xs">Never</span>
+                            <span>Never run</span>
                           )}
-                        </td>
-                        <td className="p-4 text-right">
-                          <button
-                            onClick={() => handleDelete(source.id)}
-                            disabled={!source.enabled}
-                            className={`text-xs font-medium ${source.enabled ? 'text-red-600 hover:text-red-800' : 'text-gray-300 cursor-not-allowed'}`}
-                          >
-                            Disable
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                    {sources.length === 0 && (
-                      <tr>
-                        <td colSpan={6} className="p-8 text-center text-gray-500">
-                          No sources configured yet.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
+                          {source.last_error ? (
+                            <span style={{ color: '#dc2626' }} title={source.last_error}>Failed</span>
+                          ) : source.last_success_at ? (
+                            <span style={{ color: '#059669' }}>Success</span>
+                          ) : null}
+                        </div>
+                      </td>
+                      <td style={{ padding: '14px 16px', textAlign: 'right' }}>
+                        <button
+                          onClick={() => handleDelete(source.id)}
+                          disabled={!source.enabled}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            fontSize: '12px',
+                            fontWeight: 600,
+                            color: source.enabled ? '#dc2626' : '#cbd5e1',
+                            cursor: source.enabled ? 'pointer' : 'not-allowed'
+                          }}
+                        >
+                          Disable
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                  {sources.length === 0 && (
+                    <tr>
+                      <td colSpan={6} style={{ padding: '32px 16px', textAlign: 'center', color: '#94a3b8' }}>
+                        No sources configured yet.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
             </div>
           </div>
 
