@@ -1,4 +1,4 @@
-import { SlidersHorizontal } from "lucide-react";
+import { SlidersHorizontal, Milestone } from "lucide-react";
 import Navigation from "./components/Navigation";
 import JobCard from "./components/JobCard";
 import Link from "next/link";
@@ -172,7 +172,7 @@ export default async function Home() {
             <div className="profile-tip" style={{ borderColor: '#ccfbf1', background: '#f0fdfa', marginTop: '16px' }}>
               ✓ Matched to your profile. <Link href="/onboarding/resume">Update resume</Link>
             </div>
-            <div style={{ marginTop: '12px' }}>
+            <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
               <Link 
                 href="/preferences" 
                 className="filter-button" 
@@ -191,6 +191,26 @@ export default async function Home() {
               >
                 <SlidersHorizontal size={14} />
                 Refine Matches
+              </Link>
+              <Link 
+                href="/roadmap" 
+                className="filter-button" 
+                style={{ 
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '100%', 
+                  background: 'linear-gradient(135deg, #0f766e 0%, #0d9488 100%)', 
+                  color: '#ffffff', 
+                  borderColor: 'transparent', 
+                  fontWeight: 600,
+                  fontSize: '0.85rem',
+                  gap: '6px',
+                  boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                }}
+              >
+                <Milestone size={14} />
+                Skill Gap Roadmap
               </Link>
             </div>
           </aside>
@@ -214,7 +234,7 @@ export default async function Home() {
             <div className="profile-tip" style={{ borderColor: '#fee2e2', background: '#fef2f2', marginTop: '16px', color: '#991b1b' }}>
               Preview mode (backend offline). <Link href="/onboarding/resume">Try Onboarding</Link>
             </div>
-            <div style={{ marginTop: '12px' }}>
+            <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
               <Link 
                 href="/preferences" 
                 className="filter-button" 
@@ -233,6 +253,26 @@ export default async function Home() {
               >
                 <SlidersHorizontal size={14} />
                 Refine Matches
+              </Link>
+              <Link 
+                href="/roadmap" 
+                className="filter-button" 
+                style={{ 
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '100%', 
+                  background: 'linear-gradient(135deg, #0f766e 0%, #0d9488 100%)', 
+                  color: '#ffffff', 
+                  borderColor: 'transparent', 
+                  fontWeight: 600,
+                  fontSize: '0.85rem',
+                  gap: '6px',
+                  boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                }}
+              >
+                <Milestone size={14} />
+                Skill Gap Roadmap
               </Link>
             </div>
           </aside>

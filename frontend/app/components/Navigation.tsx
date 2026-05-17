@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Bookmark, ClipboardList } from "lucide-react";
+import { LayoutDashboard, Bookmark, ClipboardList, Milestone } from "lucide-react";
 
 export default function Navigation() {
   const pathname = usePathname();
@@ -20,6 +20,10 @@ export default function Navigation() {
       <Link href="/applications" className={`nav-link ${pathname === "/applications" ? "active" : ""}`}>
         <ClipboardList size={15} />
         Applied
+      </Link>
+      <Link href="/roadmap" className={`nav-link ${pathname === "/roadmap" ? "active" : ""}`}>
+        <Milestone size={15} />
+        Roadmap
       </Link>
     </nav>
   );
