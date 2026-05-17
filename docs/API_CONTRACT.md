@@ -479,18 +479,25 @@ All requests to `/internal/*` routes must include the following header:
 
 ### POST `/internal/collect/greenhouse`
 Triggers the Greenhouse job aggregator crawl to fetch new listings and persist them to the database.
+Ad-hoc endpoint — does **not** update `CollectorSource` audit fields.
 
 **Request Headers:**
 - `X-Internal-API-Key`: `<secure-key>`
 
+**Request Body:**
+```json
+{ "board_token": "cloudflare" }
+```
+
 **Response:** `200 OK`
 ```json
 {
-  "status": "completed",
-  "collector": "greenhouse",
-  "jobs_fetched": 45,
-  "jobs_new": 12,
-  "jobs_duplicates_removed": 33
+  "status": "success",
+  "board_token": "cloudflare",
+  "fetched_count": 45,
+  "new_jobs_added": 12,
+  "jobs_updated": 33,
+  "source": "greenhouse"
 }
 ```
 
@@ -498,6 +505,34 @@ Triggers the Greenhouse job aggregator crawl to fetch new listings and persist t
 
 ### POST `/internal/collect/lever`
 Triggers the Lever job aggregator crawl to fetch new listings and persist them to the database.
+Ad-hoc endpoint — does **not** update `CollectorSource` audit fields.
+
+**Request Headers:**
+- `X-Internal-API-Key`: `<secure-key>`
+
+**Request Body:**
+```json
+{ "company_id": "vercel" }
+```
+
+**Response:** `200 OK`
+```json
+{
+  "status": "success",
+  "company_id": "vercel",
+  "fetched_count": 30,
+  "new_jobs_added": 8,
+  "jobs_updated": 22,
+  "source": "lever"
+}
+```
+
+---
+
+### POST `/internal/collect/all`
+Triggers a collection run for **all enabled** `CollectorSource` rows in the database.
+This is the primary production collection endpoint and the only endpoint that updates
+`CollectorSource` audit fields (`last_run_at`, `last_success_at`, `last_error`, etc.).
 
 **Request Headers:**
 - `X-Internal-API-Key`: `<secure-key>`
@@ -506,9 +541,27 @@ Triggers the Lever job aggregator crawl to fetch new listings and persist them t
 ```json
 {
   "status": "completed",
-  "collector": "lever",
-  "jobs_fetched": 30,
-  "jobs_new": 8,
-  "jobs_duplicates_removed": 22
+  "sources_attempted": 4,
+  "sources_succeeded": 3,
+  "sources_failed": 1,
+  "total_fetched": 120,
+  "total_added": 35,
+  "total_updated": 85,
+  "results": [
+    {
+      "company": "Cloudflare",
+      "source_type": "greenhouse",
+      "status": "success",
+      "fetched": 80,
+      "added": 20,
+      "updated": 60
+    },
+    {
+      "company": "Vercel",
+      "source_type": "lever",
+      "status": "failed",
+      "error": "Connection timeout after 15s"
+    }
+  ]
 }
 ```

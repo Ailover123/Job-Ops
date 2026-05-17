@@ -85,6 +85,7 @@ Unified and deduplicated job listings aggregated from automated crawls and seed 
 
 ### `collectorsource`
 Configures the targets parsed by automatic Greenhouse and Lever crawler scripts.
+Audit fields are updated exclusively by `POST /internal/collect/all`.
 
 | Column | Type | Constraints | Description |
 | :--- | :--- | :--- | :--- |
@@ -96,8 +97,14 @@ Configures the targets parsed by automatic Greenhouse and Lever crawler scripts.
 | `enabled` | `BOOLEAN` | Default: `TRUE` | Toggle enabling or skipping this source in standard runs. |
 | `created_at` | `DATETIME` | Default: UTC Now | Creation timestamp. |
 | `updated_at` | `DATETIME` | Default: UTC Now | Last configuration change timestamp. |
+| `last_run_at` | `DATETIME` | Nullable | Timestamp of the most recent `/collect/all` attempt (regardless of outcome). |
+| `last_success_at` | `DATETIME` | Nullable | Timestamp of the most recent **successful** collection run. |
+| `last_error` | `VARCHAR` | Nullable | Error message from the most recent **failed** run. `NULL` when the last run succeeded. |
+| `last_fetched_count` | `INTEGER` | Nullable | Number of jobs returned by the ATS on the last successful run. |
+| `last_saved_count` | `INTEGER` | Nullable | Number of **new** jobs inserted into the `job` table on the last successful run. |
 
 ---
+
 
 ### `savedjob`
 Candidate's bookmarked job listings.

@@ -60,6 +60,23 @@ This project intentionally avoids making resume rewriting or auto-apply the core
 2. Install dependencies: `npm.cmd install`.
 3. Start dev server: `npm.cmd run dev`.
 
+### Collect Real Jobs Locally
+Once the backend is running, trigger a full collection run across all configured sources:
+```bash
+curl -X POST http://localhost:8000/api/v1/internal/collect/all \
+  -H "X-Internal-API-Key: <your-INTERNAL_API_KEY>"
+```
+This queries every enabled `CollectorSource` row in the database and fetches live
+listings from the configured Greenhouse and Lever ATS boards. Results are persisted
+to the `job` table and immediately surfaced by the recommendations engine.
+
+To add or enable sources, insert rows into the `collectorsource` table via the database
+or seed them in `backend/app/database.py` → `init_db()`.
+
+> **Note:** `data/seed_jobs_dev_fallback.json` is used only when the database has
+> zero imported jobs. Once real jobs are collected, fallback seed listings with
+> `example.com` URLs are automatically excluded from recommendations.
+
 ## Documentation
 For more details, see the `docs/` directory:
 - [ARCHITECTURE.md](docs/ARCHITECTURE.md) - Technical overview

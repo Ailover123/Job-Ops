@@ -170,12 +170,19 @@ def load_all_jobs() -> List[SeedJob]:
     return deduplicate_jobs(seed_jobs + imported_jobs)
 
 
-def save_imported_jobs(new_jobs: List[SeedJob]) -> int:
+def save_imported_jobs(new_jobs: List[SeedJob]) -> dict:
     """
-    Save new_jobs to the database. Inserts new jobs or updates existing ones,
-    and returns the number of newly added jobs.
+    Save new_jobs to the database. Inserts new jobs or updates existing ones.
+
+    Returns a summary dict:
+        {
+            "fetched":  total number of jobs passed in,
+            "added":    newly inserted jobs,
+            "updated":  jobs that already existed and were refreshed,
+        }
     """
     added_count = 0
+    updated_count = 0
     try:
         with Session(engine) as session:
             for job in new_jobs:
@@ -204,6 +211,7 @@ def save_imported_jobs(new_jobs: List[SeedJob]) -> int:
                     )
                     session.add(db_job)
                 else:
+                    updated_count += 1
                     # Update existing job fields to keep it fresh
                     existing.title = job.title
                     existing.company_name = job.company_name
@@ -225,5 +233,6 @@ def save_imported_jobs(new_jobs: List[SeedJob]) -> int:
             session.commit()
     except Exception as e:
         print(f"Error saving imported jobs to database: {e}")
-    return added_count
+    return {"fetched": len(new_jobs), "added": added_count, "updated": updated_count}
+
 

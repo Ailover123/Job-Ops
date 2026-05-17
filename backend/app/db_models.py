@@ -91,4 +91,12 @@ class CollectorSource(SQLModel, table=True):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
+    # Audit / status fields populated by /collect/all
+    last_run_at: Optional[datetime] = Field(default=None, nullable=True)
+    last_success_at: Optional[datetime] = Field(default=None, nullable=True)
+    last_error: Optional[str] = Field(default=None, nullable=True)
+    last_fetched_count: Optional[int] = Field(default=None, nullable=True)
+    last_saved_count: Optional[int] = Field(default=None, nullable=True)
+
+
 
