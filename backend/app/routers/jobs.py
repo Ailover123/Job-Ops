@@ -55,7 +55,7 @@ async def save_job(request: JobActionRequest, session: Session = Depends(get_ses
 @router.get("/saved-jobs")
 async def list_saved_jobs(session: Session = Depends(get_session)):
     """List all saved jobs."""
-    statement = select(SavedJob).order_by(SavedJob.saved_at.desc())
+    statement = select(SavedJob).order_by(desc(SavedJob.saved_at))
     results = session.exec(statement).all()
     return {"items": results}
 
@@ -107,7 +107,7 @@ async def record_application(request: ApplicationRequest, session: Session = Dep
 @router.get("/applications")
 async def list_applications(session: Session = Depends(get_session)):
     """List all applications."""
-    statement = select(Application).order_by(Application.applied_at.desc())
+    statement = select(Application).order_by(desc(Application.applied_at))
     results = session.exec(statement).all()
     return {"items": results}
 

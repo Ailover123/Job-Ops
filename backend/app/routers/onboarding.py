@@ -2,7 +2,7 @@ from fastapi import APIRouter, File, UploadFile, HTTPException, Depends
 from pydantic import BaseModel
 import io
 from pypdf import PdfReader
-from sqlmodel import Session, select
+from sqlmodel import Session, select, desc
 from app.schemas import ProfileExtractRequest, ProfileExtractResponse, ResumeProfile
 from app.services.parser_service import extract_profile_from_text
 from app.database import get_session
@@ -96,7 +96,7 @@ async def fetch_latest_profile(session: Session = Depends(get_session)):
     """
     Fetch the most recently saved profile.
     """
-    statement = select(Profile).order_by(Profile.created_at.desc()).limit(1)
+    statement = select(Profile).order_by(desc(Profile.created_at)).limit(1)
     results = session.exec(statement)
     db_profile = results.first()
     

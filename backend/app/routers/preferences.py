@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
-from sqlmodel import Session, select
+from sqlmodel import Session, select, desc
 from datetime import datetime, timezone
 from typing import List, Optional
 from app.database import get_session
@@ -46,7 +46,7 @@ def save_preferences(req: PreferencesRequest, session: Session = Depends(get_ses
 
 @router.get("/preferences/latest", response_model=Optional[PreferencesResponse])
 def get_latest_preferences(session: Session = Depends(get_session)):
-    statement = select(Preferences).order_by(Preferences.updated_at.desc()).limit(1)
+    statement = select(Preferences).order_by(desc(Preferences.updated_at)).limit(1)
     results = session.exec(statement)
     db_pref = results.first()
     return db_pref

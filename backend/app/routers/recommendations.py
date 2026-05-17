@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends
-from sqlmodel import Session, select
+from sqlmodel import Session, select, desc
 
 from app.matching import rank_jobs
 from app.models import CandidateProfile, Recommendation
@@ -21,11 +21,11 @@ async def recommendations_from_latest_profile(session: Session = Depends(get_ses
     """
     Fetch the latest profile and return recommendations.
     """
-    statement = select(Profile).order_by(Profile.created_at.desc()).limit(1)
+    statement = select(Profile).order_by(desc(Profile.created_at)).limit(1)
     results = session.exec(statement)
     db_profile = results.first()
 
-    statement_pref = select(Preferences).order_by(Preferences.updated_at.desc()).limit(1)
+    statement_pref = select(Preferences).order_by(desc(Preferences.updated_at)).limit(1)
     results_pref = session.exec(statement_pref)
     db_pref = results_pref.first()
 
