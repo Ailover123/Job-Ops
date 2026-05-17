@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Bookmark, BriefcaseBusiness, CheckCircle2, MapPin, ExternalLink } from "lucide-react";
+import Link from "next/link";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000";
 
@@ -101,7 +102,11 @@ export default function JobCard({
       <div className="job-main">
         <div className="job-content">
           <div className="title-row">
-            <h3>{job.title}</h3>
+            <h3>
+              <Link href={`/jobs/${job.external_id}`} className="job-title-link">
+                {job.title}
+              </Link>
+            </h3>
             <span className={`match-label ${score_label.toLowerCase().replace(/\s+/g, "-")}`}>{score_label}</span>
           </div>
           <p className="company">{job.company_name}</p>

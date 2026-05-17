@@ -181,3 +181,49 @@ def test_update_application_not_found(client: TestClient):
     )
     assert response.status_code == 404
     assert response.json()["detail"] == "Application not found"
+
+
+def test_get_job_detail_anonymous(client: TestClient):
+    response = client.get("/api/v1/jobs/seed-001")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["job"]["external_id"] == "seed-001"
+    assert data["has_profile"] is False
+    assert data["match_score"] is None
+    assert data["match_explanation"] is None
+
+
+def test_get_job_detail_personalized(client: TestClient, session: Session):
+    from app.db_models import Profile, Preferences
+    
+    profile = Profile(
+        full_name="John Doe",
+        email="john@example.com",
+        skills=[{"name": "Python"}, {"name": "FastAPI"}],
+        location={"city": "Remote"}
+    )
+    session.add(profile)
+    
+    pref = Preferences(
+        preferred_roles=["Python Developer Intern"],
+        preferred_locations=["Remote"],
+        remote_preference="remote_only",
+        job_types=["internship"]
+    )
+    session.add(pref)
+    session.commit()
+    
+    response = client.get("/api/v1/jobs/seed-001")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["job"]["external_id"] == "seed-001"
+    assert data["has_profile"] is True
+    assert data["match_score"] is not None
+    assert isinstance(data["match_score"], int)
+    assert "Python" in data["match_explanation"] or "fastapi" in data["match_explanation"].lower()
+
+
+def test_get_job_detail_not_found(client: TestClient):
+    response = client.get("/api/v1/jobs/invalid-id")
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Job not found"

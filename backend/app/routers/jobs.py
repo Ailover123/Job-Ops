@@ -1,11 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlmodel import Session, select
+from sqlmodel import Session, select, desc
 from typing import List, Literal, Optional
 from datetime import datetime, timezone
 from pydantic import BaseModel
 
 from app.database import get_session
-from app.db_models import SavedJob, Application
+from app.db_models import SavedJob, Application, Profile, Preferences
+from app.seed_loader import load_seed_jobs
+from app.matching import score_job
+from app.models import CandidateProfile
 
 router = APIRouter(tags=["jobs"])
 
@@ -129,3 +132,80 @@ async def update_application(
     session.commit()
     session.refresh(db_app)
     return {"status": "success", "item": db_app}
+
+
+@router.get("/jobs/{external_id}")
+async def get_job_detail(external_id: str, session: Session = Depends(get_session)):
+    """Fetch job details and compute candidate compatibility scores."""
+    # Find the job in seed jobs
+    jobs = load_seed_jobs()
+    job = next((j for j in jobs if j.external_id == external_id), None)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    # Fetch latest profile and preferences
+    db_profile = session.exec(select(Profile).order_by(desc(Profile.created_at)).limit(1)).first()
+    db_pref = session.exec(select(Preferences).order_by(desc(Preferences.updated_at)).limit(1)).first()
+
+    if not db_profile and not db_pref:
+        return {
+            "job": job,
+            "has_profile": False,
+            "match_score": None,
+            "match_label": None,
+            "match_explanation": None,
+            "skill_score": None,
+            "fresher_score": None,
+            "location_score": None,
+            "experience_score": None
+        }
+
+    # Construct the merged CandidateProfile
+    extracted_skills = []
+    preferred_locations = []
+    preferred_roles = []
+
+    if db_profile:
+        extracted_skills = [s.get("name") for s in db_profile.skills if s.get("name")]
+        if db_profile.location and db_profile.location.get("city"):
+            preferred_locations.append(db_profile.location.get("city"))
+        preferred_roles = db_profile.suggested_roles or []
+
+    remote_pref = "remote_or_hybrid"
+    job_types = ["internship", "full_time"]
+    willing_to_relocate = False
+
+    if db_pref:
+        if db_pref.preferred_roles:
+            preferred_roles = db_pref.preferred_roles
+        if db_pref.preferred_locations:
+            preferred_locations = db_pref.preferred_locations
+        if db_pref.preferred_tech_stack:
+            extracted_skills = list(set(extracted_skills + db_pref.preferred_tech_stack))
+        remote_pref = db_pref.remote_preference
+        job_types = db_pref.job_types or job_types
+        willing_to_relocate = db_pref.willing_to_relocate
+
+    candidate = CandidateProfile(
+        preferred_roles=preferred_roles,
+        skills=extracted_skills,
+        preferred_locations=preferred_locations,
+        remote_preference=remote_pref,
+        job_types=job_types,
+        experience_level="fresher",
+        willing_to_relocate=willing_to_relocate
+    )
+
+    rec = score_job(candidate, job)
+
+    return {
+        "job": job,
+        "has_profile": True,
+        "match_score": rec.final_score,
+        "match_label": rec.score_label,
+        "match_explanation": rec.explanation,
+        "skill_score": rec.skill_score,
+        "fresher_score": rec.fresher_score,
+        "location_score": rec.location_score,
+        "experience_score": rec.experience_score
+    }
