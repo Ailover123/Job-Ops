@@ -3,7 +3,7 @@ import Navigation from "./components/Navigation";
 import JobCard from "./components/JobCard";
 import Link from "next/link";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000";
+import { API_BASE_URL } from "./lib/api";
 
 const MOCK_RECOMMENDATIONS = [
   {

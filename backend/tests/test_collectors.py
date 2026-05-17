@@ -10,16 +10,33 @@ from app.collectors import GreenhouseCollector, LeverCollector
 from app.models import SeedJob
 import app.seed_loader as seed_loader
 
-# A clean, isolated environment using temporary imported_jobs path
+# A clean, isolated environment using an in-memory python list mock
 @pytest.fixture(autouse=True)
-def mock_imported_jobs_path(tmp_path, monkeypatch):
-    test_path = tmp_path / "test_imported_jobs.json"
-    monkeypatch.setattr("app.seed_loader.IMPORTED_JOBS_PATH", test_path)
-    return test_path
+def mock_db_imported_jobs(monkeypatch):
+    test_jobs_list = []
+    
+    def mock_load():
+        return test_jobs_list
+        
+    def mock_save(new_jobs):
+        added = 0
+        for nj in new_jobs:
+            if not any(x.external_id == nj.external_id for x in test_jobs_list):
+                test_jobs_list.append(nj)
+                added += 1
+        return added
+        
+    monkeypatch.setattr("app.seed_loader.load_imported_jobs", mock_load)
+    monkeypatch.setattr("app.seed_loader.save_imported_jobs", mock_save)
+    monkeypatch.setattr("app.routers.internal.save_imported_jobs", mock_save)
+    return test_jobs_list
+
+from app.routers.internal import verify_internal_key
 
 @pytest.fixture(name="client")
 def client_fixture():
     # Simple TestClient fixture
+    app.dependency_overrides[verify_internal_key] = lambda: None
     client = TestClient(app)
     yield client
     app.dependency_overrides.clear()

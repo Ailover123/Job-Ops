@@ -58,3 +58,37 @@ class Preferences(SQLModel, table=True):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
+
+class Job(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    external_id: str = Field(index=True, unique=True)
+    title: str
+    company_name: str
+    description: str
+    location: str
+    city: Optional[str] = None
+    state: Optional[str] = None
+    country: Optional[str] = None
+    is_remote: bool = False
+    job_type: str
+    experience_min: Optional[int] = None
+    experience_max: Optional[int] = None
+    skills: List[str] = Field(default_factory=list, sa_column=Column(JSON))
+    apply_url: str
+    source_name: str
+    posted_at: Optional[str] = None
+    is_active: bool = True
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class CollectorSource(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    company_name: str
+    board_token: Optional[str] = None
+    company_id: Optional[str] = None
+    source_type: str  # greenhouse or lever
+    enabled: bool = True
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+

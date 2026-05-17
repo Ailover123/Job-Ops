@@ -16,7 +16,7 @@ import {
 import Link from "next/link";
 import Navigation from "../../components/Navigation";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000";
+import { API_BASE_URL } from "../../lib/api";
 
 interface Job {
   external_id: string;

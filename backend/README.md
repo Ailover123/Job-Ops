@@ -10,9 +10,10 @@ FastAPI backend for Job-Ops.
 - Matching and recommendation APIs
 - Saved/applied job tracking
 
-## First Backend Goal
+## Real Jobs & Dev Fallback
 
-Serve recommendations from `data/seed_jobs.json` using the rule-based matching starter.
+- **Real Job Listings**: Ingested directly from public Greenhouse/Lever boards via internal collector endpoints and saved in the PostgreSQL/SQLite `Job` database table.
+- **Development Fallback**: When the database is empty of imported jobs, `data/seed_jobs_dev_fallback.json` provides an offline/mock set of seed listings for early testing. Fake `example.com` seed jobs are filtered out in production when real database-backed listings are present.
 
 ## Suggested Local Run
 

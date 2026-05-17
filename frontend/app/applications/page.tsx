@@ -6,7 +6,7 @@ import Link from "next/link";
 import Navigation from "../components/Navigation";
 import JobCard from "../components/JobCard";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000";
+import { API_BASE_URL } from "../lib/api";
 
 export default function ApplicationsPage() {
   const [apps, setApps] = useState<any[]>([]);

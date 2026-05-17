@@ -34,6 +34,8 @@ backend/pyrefly.toml
 # Local data
 *.sqlite
 *.sqlite3
+data/imported_jobs.json
+
 
 # Local AI-agent handoff notes
 docs/LOCAL_HANDOFF.md
@@ -41,5 +43,9 @@ docs/BUILD_LOG.md
 docs/NEXT_STEPS.md
 docs/KNOWN_ISSUES.md
 docs/DECISIONS.md
- 
 *.db
+
+# Pytest & local temp
+.pytest_cache/
+backend/.pytest_cache/
+backend/.tmp/

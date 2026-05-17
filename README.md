@@ -18,7 +18,7 @@ This project intentionally avoids making resume rewriting or auto-apply the core
 
 ---
 
-### 📡 Application Flow
+### Application Flow
 
 1. **Onboarding**: User uploads a PDF resume.
 2. **Extraction**: Backend uses Gemini to parse technical skills, roles, and experience.
@@ -52,7 +52,7 @@ This project intentionally avoids making resume rewriting or auto-apply the core
    DATABASE_URL=postgresql://user:pass@host:5432/dbname
    BACKEND_CORS_ORIGINS=["http://localhost:3000", "http://127.0.0.1:3000", "http://192.168.0.105:3000"]
    ```
-5. Run migrations (initializes schema): `python -m app.main`.
+5. Run migrations (initializes schema): `alembic upgrade head`.
 6. Start server: `python -m uvicorn app.main:app --reload`.
 
 ### Frontend Setup

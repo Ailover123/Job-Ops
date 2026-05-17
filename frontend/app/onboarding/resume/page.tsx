@@ -4,7 +4,7 @@ import { useState, useRef } from "react";
 import { FileText, Upload, X, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 import Link from "next/link";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000";
+import { API_BASE_URL } from "../../lib/api";
 
 export default function ResumeUpload() {
   const [file, setFile] = useState<File | null>(null);

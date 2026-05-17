@@ -50,26 +50,24 @@ class GreenhouseCollector:
         location_data = job.get("location", {})
         location_name = location_data.get("name", "Unknown").strip() if location_data else "Unknown"
         
-        # Analyze remote preference
+        # Analyze remote preference (strict title and location only, using word boundary regexes)
         is_remote = False
         location_lower = location_name.lower()
         title_lower = title.lower()
-        desc_lower = description.lower()
         
-        if (
-            "remote" in location_lower or 
-            "wfh" in location_lower or 
-            "remote" in title_lower or 
-            "work from home" in desc_lower or
-            "anywhere" in location_lower
-        ):
+        import re
+        remote_pattern = re.compile(r'\b(remote|wfh|anywhere)\b')
+        if remote_pattern.search(location_lower) or remote_pattern.search(title_lower):
             is_remote = True
             
-        # Parse job type: default to full_time unless 'intern' or 'contract' is in title
+        # Parse job type: default to full_time unless 'intern' or 'contract' is in title (using word boundaries)
         job_type = "full_time"
-        if "intern" in title_lower or "internship" in title_lower or "intern" in desc_lower:
+        intern_pattern = re.compile(r'\b(intern|internship|co-op|coop)\b')
+        contract_pattern = re.compile(r'\b(contract|contractor|temp|temporary)\b')
+        
+        if intern_pattern.search(title_lower):
             job_type = "internship"
-        elif "contract" in title_lower or "contractor" in title_lower or "contract" in desc_lower:
+        elif contract_pattern.search(title_lower):
             job_type = "contract"
             
         # Parse experience ranges

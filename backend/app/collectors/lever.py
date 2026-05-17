@@ -54,40 +54,30 @@ class LeverCollector:
         location_name = categories.get("location", "Unknown").strip()
         commitment = categories.get("commitment", "").strip()
         
-        # Analyze remote preference
+        # Analyze remote preference (strict title, location, and workplaceType only, using word boundary regexes)
         is_remote = False
         workplace_type = str(job.get("workplaceType", "")).lower()
         location_lower = location_name.lower()
         title_lower = title.lower()
-        desc_lower = description.lower()
         
+        import re
+        remote_pattern = re.compile(r'\b(remote|wfh|anywhere)\b')
         if (
             workplace_type == "remote" or
-            "remote" in location_lower or 
-            "wfh" in location_lower or 
-            "remote" in title_lower or 
-            "work from home" in desc_lower or
-            "anywhere" in location_lower
+            remote_pattern.search(location_lower) or 
+            remote_pattern.search(title_lower)
         ):
             is_remote = True
             
-        # Parse job type: check commitment or title
+        # Parse job type: check commitment or title (using word boundaries, eliminating description)
         job_type = "full_time"
         commitment_lower = commitment.lower()
+        intern_pattern = re.compile(r'\b(intern|internship|co-op|coop)\b')
+        contract_pattern = re.compile(r'\b(contract|contractor|temp|temporary)\b')
         
-        if (
-            "intern" in title_lower or 
-            "internship" in title_lower or 
-            "intern" in commitment_lower or 
-            "intern" in desc_lower
-        ):
+        if intern_pattern.search(title_lower) or intern_pattern.search(commitment_lower):
             job_type = "internship"
-        elif (
-            "contract" in title_lower or 
-            "contractor" in title_lower or 
-            "contract" in commitment_lower or 
-            "contract" in desc_lower
-        ):
+        elif contract_pattern.search(title_lower) or contract_pattern.search(commitment_lower):
             job_type = "contract"
             
         # Parse experience ranges

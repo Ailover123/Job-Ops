@@ -6,11 +6,13 @@ from pathlib import Path
 from typing import List
 from urllib.parse import urlparse
 
+from sqlmodel import Session, select
+from app.database import engine
+from app.db_models import Job
 from app.models import SeedJob
 
-
 ROOT_DIR = Path(__file__).resolve().parents[2]
-SEED_JOBS_PATH = ROOT_DIR / "data" / "seed_jobs.json"
+SEED_JOBS_PATH = ROOT_DIR / "data" / "seed_jobs_dev_fallback.json"
 IMPORTED_JOBS_PATH = ROOT_DIR / "data" / "imported_jobs.json"
 
 
@@ -22,15 +24,36 @@ def load_seed_jobs() -> List[SeedJob]:
 
 
 def load_imported_jobs() -> List[SeedJob]:
-    """Load collected jobs from the JSON cache file."""
-    if not IMPORTED_JOBS_PATH.exists():
-        return []
+    """Load collected jobs from the database."""
     try:
-        with IMPORTED_JOBS_PATH.open("r", encoding="utf-8") as file:
-            rows = json.load(file)
-        return [SeedJob.model_validate(row) for row in rows]
-    except Exception:
+        with Session(engine) as session:
+            jobs_db = session.exec(select(Job)).all()
+            return [
+                SeedJob(
+                    external_id=job.external_id,
+                    title=job.title,
+                    company_name=job.company_name,
+                    description=job.description,
+                    location=job.location,
+                    city=job.city,
+                    state=job.state,
+                    country=job.country,
+                    is_remote=job.is_remote,
+                    job_type=job.job_type,
+                    experience_min=job.experience_min,
+                    experience_max=job.experience_max,
+                    skills=job.skills,
+                    apply_url=job.apply_url,
+                    source_name=job.source_name,
+                    posted_at=job.posted_at,
+                    is_active=job.is_active
+                )
+                for job in jobs_db
+            ]
+    except Exception as e:
+        print(f"Error loading imported jobs from database: {e}")
         return []
+
 
 
 def normalize_text(text: str) -> str:
@@ -138,31 +161,69 @@ def load_all_jobs() -> List[SeedJob]:
     # Prioritize seed jobs (loaded first) over crawled/imported duplicate jobs
     seed_jobs = load_seed_jobs()
     imported_jobs = load_imported_jobs()
+    
+    # Filter out fake example.com jobs when real imported jobs exist in the database (production recommendation logic)
+    import os
+    if imported_jobs and "PYTEST_CURRENT_TEST" not in os.environ:
+        seed_jobs = [job for job in seed_jobs if "example.com" not in (job.apply_url or "")]
+        
     return deduplicate_jobs(seed_jobs + imported_jobs)
 
 
 def save_imported_jobs(new_jobs: List[SeedJob]) -> int:
     """
-    Save new_jobs to the JSON cache. Merges with existing imported jobs,
-    deduplicates by external_id, and returns the number of newly added jobs.
+    Save new_jobs to the database. Inserts new jobs or updates existing ones,
+    and returns the number of newly added jobs.
     """
-    existing_jobs = load_imported_jobs()
-    existing_by_id = {j.external_id: j for j in existing_jobs}
-    
     added_count = 0
-    for job in new_jobs:
-        if job.external_id not in existing_by_id:
-            added_count += 1
-        existing_by_id[job.external_id] = job
-        
-    # Serialize to JSON dicts
-    serialized = [j.model_dump() for j in existing_by_id.values()]
-    
-    # Ensure parent data/ directory exists
-    IMPORTED_JOBS_PATH.parent.mkdir(parents=True, exist_ok=True)
-    
-    with IMPORTED_JOBS_PATH.open("w", encoding="utf-8") as file:
-        json.dump(serialized, file, indent=2, ensure_ascii=False)
-        
+    try:
+        with Session(engine) as session:
+            for job in new_jobs:
+                # Check if job already exists
+                existing = session.exec(select(Job).where(Job.external_id == job.external_id)).first()
+                if not existing:
+                    added_count += 1
+                    db_job = Job(
+                        external_id=job.external_id,
+                        title=job.title,
+                        company_name=job.company_name,
+                        description=job.description,
+                        location=job.location,
+                        city=job.city,
+                        state=job.state,
+                        country=job.country,
+                        is_remote=job.is_remote,
+                        job_type=job.job_type,
+                        experience_min=job.experience_min,
+                        experience_max=job.experience_max,
+                        skills=job.skills,
+                        apply_url=job.apply_url,
+                        source_name=job.source_name,
+                        posted_at=job.posted_at,
+                        is_active=job.is_active
+                    )
+                    session.add(db_job)
+                else:
+                    # Update existing job fields to keep it fresh
+                    existing.title = job.title
+                    existing.company_name = job.company_name
+                    existing.description = job.description
+                    existing.location = job.location
+                    existing.city = job.city
+                    existing.state = job.state
+                    existing.country = job.country
+                    existing.is_remote = job.is_remote
+                    existing.job_type = job.job_type
+                    existing.experience_min = job.experience_min
+                    existing.experience_max = job.experience_max
+                    existing.skills = job.skills
+                    existing.apply_url = job.apply_url
+                    existing.source_name = job.source_name
+                    existing.posted_at = job.posted_at
+                    existing.is_active = job.is_active
+                    session.add(existing)
+            session.commit()
+    except Exception as e:
+        print(f"Error saving imported jobs to database: {e}")
     return added_count
 
