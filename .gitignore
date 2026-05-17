@@ -28,6 +28,8 @@ pnpm-debug.log*
 Thumbs.db
 .idea/
 .vscode/
+pyrefly.toml
+backend/pyrefly.toml
 
 # Local data
 *.sqlite

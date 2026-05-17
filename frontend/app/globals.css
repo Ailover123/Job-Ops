@@ -845,6 +845,28 @@ h3 { font-size: 15px; }
   padding: 24px;
 }
 
+.skip-onboarding-link {
+  color: #94a3b8;
+  font-size: 13px;
+  text-decoration: none;
+  text-align: center;
+  display: block;
+  padding: 8px 16px;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: color 0.15s, background 0.15s;
+}
+
+.skip-onboarding-link:hover {
+  color: #475569;
+  background: #f1f5f9;
+}
+
+.skip-onboarding-link:focus-visible {
+  outline: 2px solid #0f766e;
+  outline-offset: 2px;
+}
+
 /* ===== Global focus-visible ===== */
 button:focus-visible,
 a:focus-visible,

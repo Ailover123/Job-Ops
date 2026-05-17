@@ -88,3 +88,32 @@ def test_upload_resume_invalid_type(client: TestClient):
         files={"file": ("test.txt", io.BytesIO(text_content), "text/plain")}
     )
     assert response.status_code == 400
+
+def test_extract_profile_endpoints(client: TestClient):
+    # Test canonical route
+    response_canonical = client.post(
+        "/api/v1/onboarding/profile/extract",
+        json={"resume_text": "John Doe, Python, Javascript"}
+    )
+    assert response_canonical.status_code == 200
+    data_c = response_canonical.json()
+    assert "profile" in data_c
+    assert data_c["extraction_method"] in ["gemini", "fallback"]
+
+    # Test alias route
+    response_alias = client.post(
+        "/api/v1/profile/extract",
+        json={"resume_text": "John Doe, Python, Javascript"}
+    )
+    assert response_alias.status_code == 200
+    data_a = response_alias.json()
+    assert "profile" in data_a
+    assert data_a["extraction_method"] in ["gemini", "fallback"]
+
+def test_extract_profile_empty_text(client: TestClient):
+    response = client.post(
+        "/api/v1/onboarding/profile/extract",
+        json={"resume_text": ""}
+    )
+    assert response.status_code == 400
+    assert "Resume text is required" in response.json()["detail"]

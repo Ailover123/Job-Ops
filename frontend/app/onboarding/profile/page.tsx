@@ -50,7 +50,16 @@ export default function ProfileReview() {
           body: JSON.stringify({ resume_text: resumeText }),
         });
 
-        if (!response.ok) throw new Error("Failed to extract profile structured data.");
+        if (!response.ok) {
+          let errorMsg = "Failed to extract profile structured data.";
+          try {
+            const errData = await response.json();
+            if (errData && errData.detail) {
+              errorMsg = typeof errData.detail === "string" ? errData.detail : JSON.stringify(errData.detail);
+            }
+          } catch (_) {}
+          throw new Error(errorMsg);
+        }
 
         const data = await response.json();
         setProfile(data.profile);

@@ -57,6 +57,7 @@ async def upload_resume(file: UploadFile = File(...)):
         text_length=len(extracted_text)
     )
 
+@router.post("/onboarding/profile/extract", response_model=ProfileExtractResponse)
 @router.post("/profile/extract", response_model=ProfileExtractResponse)
 async def extract_profile(request: ProfileExtractRequest):
     if not request.resume_text or not request.resume_text.strip():

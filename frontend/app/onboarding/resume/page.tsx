@@ -181,7 +181,7 @@ export default function ResumeUpload() {
             </button>
           )}
 
-          <Link href="/" style={{ color: '#94a3b8', fontSize: '13px', textDecoration: 'none', textAlign: 'center' }}>
+          <Link href="/" className="skip-onboarding-link">
             Skip for now
           </Link>
         </div>

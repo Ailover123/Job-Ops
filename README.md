@@ -50,6 +50,7 @@ This project intentionally avoids making resume rewriting or auto-apply the core
    ```env
    GEMINI_API_KEY=your_key_here
    DATABASE_URL=postgresql://user:pass@host:5432/dbname
+   BACKEND_CORS_ORIGINS=["http://localhost:3000", "http://127.0.0.1:3000", "http://192.168.0.105:3000"]
    ```
 5. Run migrations (initializes schema): `python -m app.main`.
 6. Start server: `python -m uvicorn app.main:app --reload`.
